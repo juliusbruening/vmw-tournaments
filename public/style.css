@@ -1,0 +1,529 @@
+:root{
+  --vmw-red:#C8102E;
+  --vmw-red-dark:#9C0C24;
+  --vmw-red-soft:#FCE7EA;
+  --orange:#E67E22;
+  --orange-soft:#FDEFE0;
+  --green:#27AE60;
+  --green-soft:#E4F5EC;
+  --ink:#1A1A1A;
+  --ink-2:#4A4A4A;
+  --ink-3:#8A8A8A;
+  --line:#E8E8E8;
+  --bg:#F5F5F7;
+  --card:#FFFFFF;
+  --shadow:0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04);
+  --radius:14px;
+  --radius-sm:10px;
+  --tabbar-h:64px;
+  --header-h:60px;
+
+  /* ─── P2 Design-Tokens (ergänzen die bestehenden, ohne sie zu ersetzen) ─── */
+
+  /* Cream-Background: ersetzt --bg im Body erst nach Screen-Migrationen,
+     damit Zwischenzustände konsistent bleiben (siehe IMPLEMENTATION_PLAN 3.1). */
+  --bg-base:    #F7F4ED;
+  --bg-muted:   #F0EBE0;
+  --bg-overlay: rgba(20,20,20,0.55);
+
+  /* Status-Pills */
+  --pill-live-bg:     #DCFCE7;
+  --pill-live-ink:    #15803D;
+  --pill-planned-bg:  #FEF3C7;
+  --pill-planned-ink: #A16207;
+  --pill-done-bg:     #F1F1F1;
+  --pill-done-ink:    #555;
+  --pill-extern-bg:   #FFEDD5;
+  --pill-extern-ink:  #B45309;
+  --pill-class-bg:    #F5EDE6;
+  --pill-class-ink:   #6B4423;
+
+  /* Lizenz-Letter-Farben */
+  --lizenz-a:    #16A34A;
+  --lizenz-b:    #2563EB;
+  --lizenz-c:    #EA580C;
+  --lizenz-plz:  #71717A;
+  --lizenz-icf:  #7C3AED;
+
+  /* Spacing-Skala (4-Punkt-Grid) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+
+  /* Border-Radii — ergänzen das bestehende --radius */
+  --r-sm:   6px;
+  --r-md:   10px;
+  --r-lg:   14px;
+  --r-pill: 999px;
+
+  /* Schatten — granularer als das bestehende --shadow */
+  --shadow-soft:  0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-card:  0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.05);
+  --shadow-elev:  0 4px 12px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.06);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color:var(--ink);background:var(--bg);font-size:15px;line-height:1.4;
+  padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+a{color:inherit;text-decoration:none}
+.container{max-width:480px;margin:0 auto;background:var(--bg);min-height:100vh;position:relative}
+
+header.app{
+  position:sticky;top:0;z-index:30;
+  /* P2.3 — Glass-Blur konsistent zur .p3-page-header. Solid-Background als
+     Fallback für Browser ohne backdrop-filter. */
+  background:var(--vmw-red);
+  background:rgba(200, 16, 46, 0.96);
+  backdrop-filter:saturate(180%) blur(12px);
+  -webkit-backdrop-filter:saturate(180%) blur(12px);
+  color:#fff;
+  padding:env(safe-area-inset-top) 14px 0;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 1px 0 rgba(0,0,0,.06);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  header.app{ background:var(--vmw-red); }
+}
+/* Header-Layout (Code Review Finding #12):
+   - min-height statt fixer Höhe → der Titel darf bei langen Turniernamen
+     vertikal mehr Platz bekommen, statt abgeschnitten zu werden.
+   - .title: flex:1 1 auto + min-width:0 + overflow:hidden. Ohne min-width:0
+     bleiben Flex-Children mindestens min-content breit, was lange Wörter
+     sprengen und den Header in 4+ Zeilen quetscht.
+   - img.logo + .updated bekommen flex:0 0 auto — der Titel gibt zuerst nach,
+     die wichtigeren Anker (Logo, Datenstand) behalten ihre Größe.
+   - small bekommt nowrap + ellipsis: Untertitel passt in eine Zeile, lange
+     Namen werden ausgeblendet (Tooltip kommt aus title-Attribut). */
+header.app .inner{min-height:var(--header-h);display:flex;align-items:center;gap:8px;padding:6px 0}
+header.app img.logo{height:34px;width:auto;background:#fff;padding:3px 5px;border-radius:7px;flex:0 0 auto}
+/* BUGFIX_EXTERNES_TURNIER#D — Hierarchie umgedreht: Turniername primär.
+   Sowohl primärer Text als auch <small> bekommen nowrap+ellipsis, damit
+   weder lange Turniernamen noch lange Datumsangaben den Header sprengen. */
+header.app .title{font-weight:500;font-size:16px;letter-spacing:.2px;flex:1 1 auto;min-width:0;line-height:1.2;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+header.app .title small{display:block;font-weight:400;font-size:11px;opacity:.85;margin-top:2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header.app .updated{
+  display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;
+  color:rgba(255,255,255,.9);
+  padding:5px 8px;border-radius:7px;
+  /* P2.3 — Subtile weiße Outline + leicht getönter Hintergrund passt zu den
+     User-Area-Buttons im selben Header. */
+  background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.2);
+  min-height:28px;
+  transition:background .15s, color .15s, border-color .15s;
+  flex:0 0 auto;
+}
+header.app .updated:hover{background:rgba(255,255,255,.20);color:#fff;border-color:rgba(255,255,255,0.35)}
+header.app .updated .dot{
+  width:7px;height:7px;border-radius:50%;background:#3CD46B;flex:0 0 auto;
+  box-shadow:0 0 0 0 rgba(60,212,107,.45);
+}
+header.app .updated .dot.stale{background:#F9D55A;box-shadow:none}
+header.app .updated .dot.dead{background:rgba(255,255,255,.35);box-shadow:none}
+header.app .menu{
+  width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+  background:rgba(255,255,255,.14);margin-left:2px;flex:0 0 auto;
+}
+header.app .menu svg{width:18px;height:18px;color:#fff}
+
+/* Mobile (<480px): "Stand …"-Pill schrumpft auf reines Icon, Logout wird
+   reines 🚪 ohne Label — der Titel kriegt mehr horizontalen Raum. */
+@media (max-width: 480px) {
+  header.app .inner{gap:6px}
+  header.app .updated{padding:4px 6px;font-size:11px;min-height:26px}
+  header.app .updated #updatedText{max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+
+nav.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;
+  border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);
+}
+nav.tabbar .inner{
+  max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);
+  height:var(--tabbar-h);
+}
+nav.tabbar button{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--ink-3);font-size:11px;font-weight:500;min-height:44px;
+}
+nav.tabbar button .ico{font-size:20px;line-height:1}
+nav.tabbar button .ico-img{height:22px;width:auto;display:block;object-fit:contain;filter:saturate(.9)}
+nav.tabbar button.active .ico-img{filter:none}
+nav.tabbar button:not(.active) .ico-img{opacity:.6}
+nav.tabbar button.active{color:var(--vmw-red)}
+
+.panel{display:none;padding:14px 14px 24px}
+.panel.active{display:block}
+.panel h2{font-size:22px;font-weight:800;letter-spacing:-.3px;margin:6px 0 14px}
+.panel h3.section{
+  font-size:13px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--ink-2);margin:20px 0 8px;display:flex;align-items:center;gap:8px;
+}
+.panel h3.section .count{
+  font-weight:600;color:var(--ink-3);font-size:11px;
+  background:var(--card);border:1px solid var(--line);padding:1px 8px;border-radius:999px;
+}
+.panel .empty{
+  color:var(--ink-3);font-size:13px;padding:14px;text-align:center;
+  background:var(--card);border-radius:var(--radius-sm);
+}
+.panel .intro{color:var(--ink-2);font-size:13.5px;margin:-6px 0 14px;line-height:1.55}
+.panel .intro strong{color:var(--ink)}
+
+.day-switch{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:6px;
+  background:#fff;padding:4px;border-radius:12px;border:1px solid var(--line);margin-bottom:6px;
+}
+.day-switch button{padding:8px 10px;border-radius:9px;font-weight:600;color:var(--ink-2);font-size:13px;min-height:36px}
+.day-switch button.active{background:var(--vmw-red);color:#fff}
+.day-switch button small{display:block;font-weight:500;font-size:10px;opacity:.7;margin-top:1px}
+.day-switch button.active small{opacity:.9}
+
+.pills{display:flex;gap:6px;overflow-x:auto;padding:4px 0;scrollbar-width:none;margin:6px -14px 8px;padding-left:14px;padding-right:14px}
+.pills::-webkit-scrollbar{display:none}
+.pills button{padding:7px 13px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--ink-2);white-space:nowrap;min-height:36px}
+.pills button.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+.scope-row{display:flex;align-items:center;gap:10px;margin:8px 0 4px;padding:6px;background:#fff;border-radius:12px;border:1px solid var(--line)}
+.scope-row .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;flex:1;background:var(--bg);padding:3px;border-radius:9px}
+.scope-row .seg button{padding:7px;border-radius:7px;font-size:13px;font-weight:600;color:var(--ink-2);min-height:32px}
+.scope-row .seg button.active{background:#fff;color:var(--vmw-red);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:11px 13px 11px 15px;margin-bottom:9px;position:relative;overflow:hidden}
+.card.spielt::before, .card.pfeift::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+.card.spielt::before{background:var(--vmw-red)}
+.card.pfeift::before{background:var(--orange)}
+/* P2.5 — Live-State weicher (Mockup-Stil): 1.5px grüner Border + leicht
+   grünlicher Hintergrund statt eines 2px Outline-Rings. */
+.card.live{
+  border:1.5px solid var(--green);
+  background:#F1FCF6;
+  box-shadow:var(--shadow);
+}
+.card.past{opacity:.55;background:#FAFAFA}
+.card.past::before{opacity:.5}
+.card.compact{padding:9px 12px 9px 14px;margin-bottom:7px}
+
+.match-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;color:var(--ink-2);flex-wrap:wrap}
+.match-top .time{font-weight:800;color:var(--ink);font-size:15px;letter-spacing:.2px}
+.match-top .pitch{padding:2px 8px;border-radius:6px;background:var(--bg);font-weight:700;color:var(--ink-2);font-size:11.5px}
+.division-chip{font-size:11px;font-weight:600;color:var(--ink-3);background:var(--bg);padding:2px 7px;border-radius:6px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-left:auto}
+.badge.live{background:var(--green-soft);color:#0E7C3A}
+.badge.done{background:#EEE;color:var(--ink-2)}
+
+.match-teams{display:flex;align-items:center;gap:10px;margin:4px 0}
+.match-teams .team{flex:1;font-weight:600;color:var(--ink);font-size:14.5px;line-height:1.2}
+.match-teams .team.vmw{color:var(--vmw-red);font-weight:700}
+.match-teams .vs{color:var(--ink-3);font-weight:600;font-size:12px;flex:0 0 auto;text-align:center;min-width:54px}
+.match-teams .score{font-weight:800;font-size:18px;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:.5px;white-space:nowrap}
+/* P2.5 — Live-Score in VMW-Rot (Mockup-Stil) statt Grün; Grün ist auf der
+   Live-Card schon via Border + LIVE-Badge präsent, der Score braucht
+   die Farb-Variation für visuelle Trennung. */
+.match-teams .score.live{color:var(--vmw-red)}
+.card.live .division-chip{background:#FFE2DE;color:#993C1D}
+.match-teams .team.right{text-align:right}
+
+.match-foot{margin-top:7px;padding-top:6px;border-top:1px dashed var(--line);font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.match-foot strong{color:var(--ink)}
+.refs{margin-top:5px;width:100%;font-size:12px}
+.refs .ref-pill{display:inline-block;background:var(--orange-soft);color:#7A4310;padding:3px 9px;border-radius:999px;font-weight:600;margin:3px 4px 0 0;font-size:11.5px}
+.refs-empty{color:var(--ink-3);font-style:italic}
+
+.jury-row{font-size:11.5px;color:var(--ink-2);margin-top:6px;padding-top:5px;border-top:1px dashed var(--line)}
+.pfeift-row{font-size:12.5px;color:#7A4310;font-weight:600;margin-top:6px;padding-top:5px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.pfeift-row .icon{color:var(--orange)}
+
+/* Schiri-Karten: VMW-Pfeift-Info prominent + Gegner-Paarung dezent darunter */
+.pfeift-headline{
+  font-size:14px;font-weight:700;color:#7A4310;margin:2px 0;
+  display:flex;align-items:center;gap:5px;line-height:1.25;
+}
+.pfeift-headline .icon{color:var(--orange)}
+.pfeift-headline .weak{font-weight:500;color:var(--ink-2)}
+.pfeift-subline{font-size:11.5px;color:var(--ink-3);margin-bottom:4px;line-height:1.3}
+.pfeift-subline .vs{color:var(--ink-3);margin:0 3px}
+
+.time-block-h{
+  display:flex;align-items:center;gap:10px;margin:14px 0 8px;
+  font-weight:700;font-size:14px;color:var(--ink);
+}
+.time-block-h::before, .time-block-h::after{content:"";flex:1;height:1px;background:var(--line)}
+.time-block-h.live-block{color:var(--green)}
+.time-block-h.live-block::before, .time-block-h.live-block::after{background:var(--green);opacity:.4}
+.time-block-h .cnt{
+  background:var(--bg);border:1px solid var(--line);border-radius:999px;
+  padding:1px 8px;font-size:11px;color:var(--ink-3);font-weight:600;
+}
+
+.now-divider{
+  display:flex;align-items:center;gap:10px;margin:14px 0 14px;
+  color:var(--green);font-weight:800;font-size:11.5px;letter-spacing:1.5px;text-transform:uppercase;
+}
+.now-divider::before, .now-divider::after{content:"";flex:1;height:2px;background:var(--green);border-radius:99px;opacity:.45}
+.now-divider .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px var(--green-soft)}
+
+.past-toggle{
+  width:100%;background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:11px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:600;color:var(--ink-2);min-height:44px;
+}
+.past-toggle .arrow{color:var(--ink-3);transition:transform .2s}
+.past-toggle.open .arrow{transform:rotate(90deg)}
+.past-toggle .cnt{margin-left:auto;background:var(--bg);border-radius:999px;padding:1px 8px;font-size:11px;color:var(--ink-3)}
+
+.pulse-dot{width:9px;height:9px;border-radius:50%;background:var(--green);position:relative;flex:0 0 auto}
+.pulse-dot::before{content:"";position:absolute;inset:0;border-radius:50%;background:var(--green);animation:pulse 1.6s ease-out infinite}
+@keyframes pulse{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.6);opacity:0}}
+
+.table-wrap{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th, table.t td{padding:9px 7px;text-align:right;vertical-align:middle}
+table.t th{font-size:11px;font-weight:700;color:var(--ink-3);background:var(--bg);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--line)}
+table.t td.team-cell, table.t th.team-cell{text-align:left;font-weight:600}
+table.t tr{border-bottom:1px solid var(--line)}
+table.t tr:last-child{border-bottom:0}
+table.t .rank{color:var(--ink-3);font-weight:600;width:24px}
+table.t .ppg{font-weight:800;color:var(--vmw-red)}
+table.t tr.vmw-row td.team-cell{color:var(--vmw-red)}
+
+.roster-row{display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);background:#fff}
+.roster-row:last-child{border-bottom:0;border-radius:0 0 var(--radius) var(--radius)}
+.roster-row:first-child{border-radius:var(--radius) var(--radius) 0 0}
+.roster-row .nr{width:32px;height:32px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-weight:700;font-size:13px}
+.roster-row .name{font-weight:600}
+.roster-row .name.empty{color:var(--ink-3);font-weight:500;font-style:italic}
+.roster-row .goals{font-weight:800;color:var(--vmw-red);font-variant-numeric:tabular-nums}
+.roster-row .goals small{color:var(--ink-3);font-weight:500;margin-left:3px}
+
+.scorer{display:grid;grid-template-columns:28px auto 1fr auto;align-items:center;gap:12px;padding:11px 13px;border-bottom:1px solid var(--line);background:#fff}
+.scorer:first-child{border-radius:var(--radius) var(--radius) 0 0}
+.scorer:last-child{border-bottom:0;border-radius:0 0 var(--radius) var(--radius)}
+.scorer .rank{color:var(--ink-3);font-weight:700;font-size:14px;text-align:center}
+.scorer .name{font-weight:600;font-size:15px}
+.scorer .name.empty{color:var(--ink-3);font-style:italic;font-weight:500}
+.scorer .goals{font-weight:800;color:var(--vmw-red);font-size:17px;font-variant-numeric:tabular-nums}
+.scorer .goals small{font-size:11px;font-weight:600;color:var(--ink-3);margin-left:3px}
+
+.team-av{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:5px 10px;border-radius:8px;font-size:11.5px;font-weight:800;
+  letter-spacing:.4px;min-width:54px;line-height:1;
+}
+.team-U14   { background:#FFF1CF; color:#8A5A00 }
+.team-U16   { background:#D7E9FA; color:#1F518D }
+.team-U21   { background:#E8DCF4; color:#6B3B96 }
+.team-Women { background:#FBDCE3; color:#A8294A }
+.team-Men2  { background:#D5F1DC; color:#1A6E3E }
+
+.more-btn{
+  width:100%;background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:11px;font-size:13px;font-weight:600;color:var(--vmw-red);margin-bottom:14px;min-height:44px;
+}
+
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:none;align-items:flex-end;justify-content:center}
+.scrim.open{display:flex}
+.sheet{background:#fff;width:100%;max-width:480px;border-radius:18px 18px 0 0;
+  padding:18px 18px calc(20px + env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto;
+  animation:slideUp .22s ease-out;position:relative}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet .grab{width:36px;height:4px;background:var(--line);border-radius:99px;margin:0 auto 14px}
+.sheet h3{margin:0 0 10px;font-size:18px;font-weight:800}
+.sheet .close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--bg);color:var(--ink-2);display:grid;place-items:center;font-size:18px}
+
+label.field{display:block;margin-top:14px}
+label.field span{font-size:12px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px}
+label.field input{width:100%;padding:11px 12px;font-size:15px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-family:inherit;min-height:44px}
+label.field input:focus{outline:2px solid var(--vmw-red);border-color:var(--vmw-red);background:#fff}
+.btn{width:100%;background:var(--vmw-red);color:#fff;font-weight:700;padding:13px;border-radius:11px;font-size:15px;margin-top:14px;min-height:48px}
+.btn.secondary{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+
+.admin-match{background:#fff;border-radius:var(--radius);padding:14px;margin-bottom:10px;box-shadow:var(--shadow);position:relative}
+.admin-match .meta{font-size:12px;color:var(--ink-2);margin-bottom:6px}
+.admin-match .meta strong{color:var(--ink)}
+.admin-match .teams{font-weight:700;margin-bottom:10px;font-size:14.5px;padding-right:96px;line-height:1.3}
+.admin-match .assigned-marker{position:absolute;top:14px;right:14px;display:flex;align-items:center;gap:4px;background:var(--green-soft);color:#0E7C3A;font-weight:700;font-size:11px;padding:3px 8px;border-radius:999px;letter-spacing:.3px}
+.admin-match.empty .assigned-marker{display:none}
+.admin-match textarea{width:100%;min-height:60px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-family:inherit;font-size:14px;resize:vertical}
+.admin-match textarea:focus{outline:2px solid var(--vmw-red);border-color:var(--vmw-red);background:#fff}
+.admin-match .hint{font-size:11.5px;color:var(--ink-3);margin-top:6px}
+.admin-match .save{margin-top:8px;padding:9px 16px;background:var(--ink);color:#fff;font-weight:700;border-radius:9px;font-size:13px;min-height:38px;transition:background .2s, transform .15s}
+.admin-match .save.ok{background:var(--green);transform:scale(1.02)}
+
+.toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + 20px);transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:99px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:60;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.loading-skel{padding:14px;color:var(--ink-3);font-size:13px;text-align:center}
+
+/* Modus-spezifische Überschriften-Varianten */
+.for-beamer{display:none}
+body.beamer .for-phone{display:none}
+body.beamer .for-beamer{display:inline}
+
+/* App footer (dezent unten) */
+.app-footer{
+  font-size:11.5px;color:var(--ink-3);text-align:center;line-height:1.55;
+  padding:24px 18px 18px;margin-top:8px;
+}
+.app-footer p{margin:4px 0}
+.app-footer a{color:var(--ink-2);text-decoration:underline;text-decoration-color:rgba(0,0,0,.14)}
+.app-footer a:hover{text-decoration-color:var(--ink-2)}
+
+/* =========================================================
+   BEAMER-MODUS (?beamer=1)
+   Vollbild-tauglich für Beamer-Projektion. Radikal verdichtet,
+   damit alles Wichtige ohne Scrollen sichtbar ist.
+   ========================================================= */
+body.beamer{
+  font-size:clamp(14px, 1vw, 22px);
+  padding-bottom:0;
+}
+body.beamer .container{ max-width:none; width:100% }
+
+/* Komplett ausgeblendet: alles was im Beamer keinen Wert hat */
+body.beamer header.app .menu,
+body.beamer nav.tabbar,
+body.beamer .app-footer,
+body.beamer .more-btn,
+body.beamer .panel h2,
+body.beamer .day-switch{ display:none !important }
+
+/* Header: schmaler, aber Logo + Vereinsname noch klar lesbar.
+   clamp() macht das fluid: bei 1080p ungefähr wie vorher, bei 4K größer, bei 720p kleiner. */
+body.beamer header.app .inner{ height:clamp(54px, 4vw, 80px); gap:14px }
+body.beamer header.app img.logo{ height:clamp(32px, 2.2vw, 56px); padding:4px 6px; border-radius:8px }
+body.beamer header.app .title{ font-size:clamp(16px, 1.2vw, 26px); line-height:1.15 }
+body.beamer header.app .title small{ font-size:clamp(11px, 0.7vw, 14px); margin-top:2px }
+body.beamer header.app .updated{ font-size:clamp(11px, 0.75vw, 15px); padding:6px 10px; gap:6px }
+body.beamer header.app .updated .dot{ width:8px; height:8px }
+
+/* Panel als 3-Spalten-Dashboard mit "Läuft gerade" über die ganze Breite oben.
+   Layout:
+     +-------------------------------+
+     | LÄUFT GERADE (volle Breite)   |
+     +-------+-------+-------+-------+
+     | DONE  | NEXT  | REF   | (QR)  |
+     +-------+-------+-------+-------+
+   WICHTIG: nur auf den aktiven Panel anwenden — sonst werden auch Spielplan,
+   Teams und Hausliga sichtbar (die im Beamer-Modus nie zu sehen sein sollen).
+*/
+body.beamer .panel.active{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  grid-template-areas:
+    "now  now  now"
+    "done next ref";
+  gap:14px 20px;
+  padding:14px 24px 16px;
+  /* Platz rechts für QR-Code: matched die clamp() Breite des qr-container + Abstand */
+  padding-right:clamp(190px, 13vw, 280px);
+  align-items:start;
+}
+body.beamer .live-section[data-section="now"]  { grid-area:now }
+body.beamer .live-section[data-section="done"] { grid-area:done }
+body.beamer .live-section[data-section="next"] { grid-area:next }
+body.beamer .live-section[data-section="ref"]  { grid-area:ref }
+body.beamer .live-section{ min-width:0 }
+
+body.beamer .panel h3.section{
+  font-size:clamp(13px, 0.9vw, 19px); margin:2px 0 6px; gap:8px; letter-spacing:.5px;
+}
+body.beamer .panel h3.section .count{
+  font-size:clamp(11px, 0.7vw, 15px); padding:1px 9px;
+}
+/* Leere Sektionen: dezent, inline, kein riesiger Block */
+body.beamer .panel .empty{
+  font-size:clamp(12px, 0.8vw, 17px); font-style:italic; color:var(--ink-3);
+  background:transparent; padding:4px 0 10px;
+  text-align:left; border-radius:0;
+}
+
+/* Match-Karten: kompakt — kleinere Paddings, geringere Schrift */
+body.beamer .card{
+  padding:9px 12px 9px 14px;
+  margin-bottom:0;
+  border-radius:11px;
+}
+body.beamer .card.spielt::before,
+body.beamer .card.pfeift::before{ width:4px }
+body.beamer .card.live{ box-shadow:0 0 0 2px var(--green), var(--shadow) }
+
+body.beamer .match-top{
+  font-size:clamp(11px, 0.7vw, 15px); gap:7px; margin-bottom:4px;
+}
+body.beamer .match-top .pitch{ font-size:clamp(11px, 0.7vw, 15px); padding:2px 8px; border-radius:6px }
+body.beamer .division-chip{ font-size:clamp(11px, 0.7vw, 15px); padding:2px 8px; border-radius:6px }
+body.beamer .badge{ font-size:clamp(11px, 0.65vw, 14px); padding:2px 9px }
+body.beamer .badge.live .pulse-dot{ width:8px; height:8px }
+body.beamer .pulse-dot{ width:9px; height:9px }
+
+body.beamer .match-teams{ gap:8px; margin:2px 0 }
+body.beamer .match-teams .team{ font-size:clamp(14px, 1vw, 22px); font-weight:700; line-height:1.2 }
+body.beamer .match-teams .score{ font-size:clamp(17px, 1.3vw, 28px) }
+body.beamer .match-teams .vs{ font-size:clamp(11px, 0.75vw, 16px); min-width:54px }
+
+body.beamer .pfeift-row{ font-size:clamp(11px, 0.8vw, 16px); margin-top:4px; padding-top:4px }
+body.beamer .pfeift-headline{ font-size:clamp(13px, 0.9vw, 19px) }
+body.beamer .pfeift-subline{ font-size:clamp(11px, 0.7vw, 14px) }
+body.beamer .refs{ font-size:clamp(11px, 0.8vw, 16px); margin-top:3px }
+body.beamer .ref-pill{
+  font-size:clamp(11px, 0.8vw, 16px); padding:2px 9px; margin:3px 4px 0 0;
+}
+body.beamer .refs-empty{ font-size:clamp(11px, 0.75vw, 15px) }
+
+/* Zeit-Block-Header: schmaler, fluid skaliert */
+body.beamer .time-block-h{
+  font-size:clamp(12px, 0.85vw, 18px); margin:10px 0 6px; gap:10px;
+}
+body.beamer .time-block-h .cnt{
+  font-size:clamp(11px, 0.7vw, 14px); padding:1px 9px;
+}
+
+/* In den 3 unteren Spalten (Done / Next / Ref): single-column, stacked Karten */
+body.beamer .time-block-cards{ display:block }
+body.beamer .time-block-cards > .card{ margin-bottom:6px }
+
+/* Die "Läuft gerade"-Sektion oben spannt voll und kann mehrere Live-Karten
+   nebeneinander legen — auto-fit greift, falls 2-3 Spiele gleichzeitig laufen */
+body.beamer .live-section[data-section="now"] .time-block-cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));
+  gap:8px;
+}
+
+/* QR-Code-Karte rechts — kompakt unter dem Header, fluid skaliert */
+.qr-container{ display:none }
+body.beamer .qr-container{
+  display:block;
+  position:fixed;
+  right:clamp(14px, 1vw, 28px);
+  top:clamp(68px, 4.8vw, 100px);
+  width:clamp(160px, 11vw, 240px);
+  background:#fff;
+  padding:14px 14px 12px;
+  border-radius:14px;
+  box-shadow:0 4px 24px rgba(0,0,0,.12);
+  text-align:center;
+  z-index:40;
+}
+body.beamer .qr-container .qr-label{
+  font-size:clamp(11px, 0.75vw, 15px); font-weight:700; color:var(--ink); margin-bottom:8px;
+}
+body.beamer .qr-container #qrCode{
+  width:100%; aspect-ratio:1; margin:0 auto;
+  display:flex; align-items:center; justify-content:center;
+}
+body.beamer .qr-container #qrCode svg{ width:100%; height:auto; display:block }
+body.beamer .qr-container .qr-url{
+  font-size:clamp(9px, 0.65vw, 13px); color:var(--ink-3); margin-top:8px;
+  word-break:break-all; line-height:1.3;
+}

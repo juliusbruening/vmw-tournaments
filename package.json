@@ -1,0 +1,33 @@
+{
+  "name": "vmw-live-app",
+  "version": "2.1.0",
+  "description": "Multi-Turnier-Live-App für VMW Berlin mit Schiedsrichter-Tracking (Phasen 1-7)",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test":            "npm run test:parse && npm run test:loader && npm run test:tid && npm run test:snapshot && npm run test:dkv-layout && npm run test:dkv-pdf && npm run test:dkv-fields && npm run test:role-mapping && npm run test:aggregation && npm run test:cache-headers && npm run test:grouping && npm run test:create-tournament",
+    "test:create-tournament": "node scripts/testCreateTournamentConfig.mjs",
+    "test:parse":         "node scripts/testParseMatchList.mjs",
+    "test:loader":        "node scripts/testTournamentLoader.mjs",
+    "test:tid":           "node scripts/testTidBasedMatching.mjs",
+    "test:snapshot":      "node scripts/testBuildSnapshotReal.mjs",
+    "test:dkv-layout":    "node scripts/checkDkvLayout.mjs",
+    "test:dkv-pdf":       "node scripts/testDkvPdf.mjs",
+    "test:dkv-fields":    "node scripts/testDkvPdfFields.mjs",
+    "test:role-mapping":  "node scripts/testRoleMapping.mjs",
+    "test:aggregation":   "node scripts/testEinsatzbogenAggregation.mjs",
+    "test:cache-headers": "node scripts/testCacheHeaders.mjs",
+    "test:grouping":      "node scripts/testLandingGrouping.mjs",
+    "scrape:once":     "node scripts/scrapeOnce.mjs",
+    "preview":         "node scripts/serveLocal.mjs",
+    "migrate:phase1":  "node scripts/migrateBlobsPhase1.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0",
+    "cheerio":        "^1.0.0",
+    "pdf-lib":        "^1.17.1"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "VMW Deutschland Cup 2026",
+  "short_name": "VMW DCup",
+  "description": "Live-Companion für den Deutschland Cup 2026 (Kanupolo) — VMW Berlin",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F5F7",
+  "theme_color": "#C8102E",
+  "icons": [
+    {
+      "src": "https://vmw-berlin.de/wp-content/uploads/2022/06/cropped-final_logo-3.png",
+      "sizes": "270x270",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

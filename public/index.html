@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#C8102E">
+  <title>VMW Live-App</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cpolygon%20points%3D%220%2C5%2095%2C50%200%2C95%22%20fill%3D%22%23C8102E%22%2F%3E%3C%2Fsvg%3E">
+  <link rel="apple-touch-icon" href="https://vmw-berlin.de/wp-content/uploads/2022/06/cropped-final_logo-3.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/phase3.css">
+  <!-- Hide body until JS hat entschieden, ob /, /t/<slug>, /admin, /me — verhindert
+       das kurze Aufblitzen der DC2026-UI bevor die Landing oder das Login rendert. -->
+  <style>body { visibility: hidden; }</style>
+</head>
+<body>
+<div class="container">
+  <header class="app">
+    <div class="inner">
+      <img class="logo" src="https://vmw-berlin.de/wp-content/uploads/2022/06/cropped-final_logo-3.png" alt="VMW" onerror="this.style.display='none'">
+      <div class="title">VMW Berlin<small>Live-App</small></div>
+      <button class="updated" id="updatedBox" onclick="openModal('info')" aria-label="Letzter Datenstand · zum Erklären antippen">
+        <span class="dot" id="updatedDot"></span>
+        <span id="updatedText">lade …</span>
+      </button>
+      <div id="userAreaSlot" style="display:flex; align-items:center; gap:6px"></div>
+    </div>
+  </header>
+
+  <section class="panel active" id="panel-live">
+    <h2>Heute</h2>
+    <div class="day-switch" id="liveDaySwitch">
+      <button data-day="1" class="active">Tag 1</button>
+      <button data-day="2">Tag 2</button>
+      <button data-day="3">Tag 3</button>
+    </div>
+    <div class="live-section" data-section="now">
+      <h3 class="section"><span class="pulse-dot"></span> <span class="for-phone">Läuft gerade</span><span class="for-beamer">Läuft gerade</span> <span class="count" id="liveNowCount">0</span></h3>
+      <div id="liveNowList"></div>
+    </div>
+    <div class="live-section" data-section="done">
+      <h3 class="section">✅ <span class="for-phone">Gerade beendet</span><span class="for-beamer">Letzte 4 Ergebnisse</span> <span class="count" id="liveDoneCount">0</span></h3>
+      <div id="liveDoneList"></div>
+      <button class="more-btn" id="liveDoneMore" hidden>▾ Weitere anzeigen</button>
+    </div>
+    <div class="live-section" data-section="next">
+      <h3 class="section">⏭ <span class="for-phone">Als Nächstes (Spielen)</span><span class="for-beamer">Nächste 4 Spiele</span> <span class="count" id="liveNextCount">0</span></h3>
+      <div id="liveNextList"></div>
+      <button class="more-btn" id="liveNextMore" hidden>▾ Weitere anzeigen</button>
+    </div>
+    <div class="live-section" data-section="ref">
+      <h3 class="section">🟠 <span class="for-phone">Als Nächstes (Schiri)</span><span class="for-beamer">Nächste 4 Schiri-Einsätze</span> <span class="count" id="liveRefCount">0</span></h3>
+      <div id="liveRefList"></div>
+      <button class="more-btn" id="liveRefMore" hidden>▾ Weitere anzeigen</button>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-plan">
+    <h2>Spielplan</h2>
+    <div class="day-switch" id="planDaySwitch">
+      <button data-day="1" class="active">Tag 1</button>
+      <button data-day="2">Tag 2</button>
+      <button data-day="3">Tag 3</button>
+    </div>
+    <div class="scope-row">
+      <div class="seg" id="scopeSeg">
+        <button data-scope="vmw" class="active">Nur VMW</button>
+        <button data-scope="all">Alle Spiele</button>
+      </div>
+    </div>
+    <div class="pills" id="planTeamPills">
+      <button data-team="all" class="active">Alle Teams</button>
+      <button data-team="U14">U14</button>
+      <button data-team="U16">U16</button>
+      <button data-team="U21">U21</button>
+      <button data-team="Women">Damen</button>
+      <button data-team="Men2">Herren</button>
+    </div>
+    <div class="pills" id="planDivisionPills" style="display:none">
+      <button data-div="all" class="active">Alle Klassen</button>
+      <button data-div="U14">U14</button>
+      <button data-div="U16">U16</button>
+      <button data-div="U21">U21</button>
+      <button data-div="Women">Damen</button>
+      <button data-div="Men1">Herren 1</button>
+      <button data-div="Men2">Herren 2</button>
+    </div>
+    <div id="planList"></div>
+  </section>
+
+  <section class="panel" id="panel-teams">
+    <h2>Teams</h2>
+    <div class="pills" id="teamPills">
+      <button data-team="U14">U14</button>
+      <button data-team="U16">U16</button>
+      <button data-team="U21">U21</button>
+      <button data-team="Women" class="active">Damen</button>
+      <button data-team="Men2">Herren</button>
+    </div>
+    <div id="teamDetail"></div>
+  </section>
+
+  <section class="panel" id="panel-haus">
+    <h2>Hausliga</h2>
+    <p class="intro">
+      Unser <strong>vereinsinterner Wettkampf</strong> zwischen den 5 VMW-Mannschaften am Turnier: Wer holt anteilig am meisten?
+      <br><br>
+      <strong>Punkte:</strong> 3 für einen Sieg, 1 fürs Unentschieden, 0 für eine Niederlage.
+      <strong>Sortierung nach durchschnittlich geholten Punkten pro Spiel (PPG)</strong>, weil die Teams unterschiedlich viele Spiele bestreiten.
+    </p>
+    <h3 class="section">🏆 Tabelle (PPG)</h3>
+    <div class="table-wrap">
+      <table class="t" id="hausligaTable">
+        <thead><tr><th class="rank">#</th><th class="team-cell">Team</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Tore</th><th>Diff</th><th>Pkt</th><th>PPG</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <h3 class="section">⚽ Torjäger:innen <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink-3);margin-left:4px">vereinsweit</span></h3>
+    <div class="pills" id="scorerPills">
+      <button data-team="all" class="active">Alle</button>
+      <button data-team="U14">U14</button>
+      <button data-team="U16">U16</button>
+      <button data-team="U21">U21</button>
+      <button data-team="Women">Damen</button>
+      <button data-team="Men2">Herren</button>
+    </div>
+    <div class="table-wrap" id="scorersList"></div>
+    <button class="more-btn" id="scorersMoreBtn" style="display:none">Weitere anzeigen</button>
+  </section>
+
+  <footer class="app-footer">
+    <p>Daten von <a href="https://cpt.kayakers.nl/" target="_blank" rel="noopener" id="footerSourceLink">cpt.kayakers.nl</a> · Aktualisierung an Turniertagen alle 15 Min</p>
+    <p>Inoffizielles Mirror — kein Ersatz für die offizielle Turnier-Seite. Erstellt für Familie, Freunde und die VMW Berlin.</p>
+    <p>Gebaut von Julius Brüning · <a href="mailto:juliusbruening1994@gmail.com?subject=Ideen%20f%C3%BCr%20weitere%20Projekte">Ideen für weitere Projekte? Schreib mir.</a></p>
+  </footer>
+
+  <nav class="tabbar">
+    <div class="inner">
+      <button data-tab="live" class="active"><img class="ico-img" src="https://vmw-berlin.de/wp-content/uploads/2022/06/vmw_flag_red.png" alt=""><span>Heute</span></button>
+      <button data-tab="plan"><span class="ico">📅</span><span>Spielplan</span></button>
+      <button data-tab="teams"><span class="ico">👥</span><span>Teams</span></button>
+      <button data-tab="haus"><span class="ico">🏆</span><span>Hausliga</span></button>
+    </div>
+  </nav>
+</div>
+
+<div class="scrim" id="adminModal" onclick="if(event.target===this)closeModal('admin')">
+  <div class="sheet">
+    <div class="grab"></div>
+    <button class="close" onclick="closeModal('admin')">×</button>
+    <div id="adminContent"></div>
+  </div>
+</div>
+
+<div class="scrim" id="infoModal" onclick="if(event.target===this)closeModal('info')">
+  <div class="sheet">
+    <div class="grab"></div>
+    <button class="close" onclick="closeModal('info')">×</button>
+    <h3>Wann werden die Daten aktualisiert?</h3>
+    <p style="margin:0 0 14px;color:var(--ink-2);font-size:14px;line-height:1.55">
+      Die Spielstände werden automatisch von der Quellseite (siehe Footer) geholt:
+    </p>
+    <div style="background:var(--bg);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-weight:700;font-size:13px;color:var(--ink);margin-bottom:4px">An Turniertagen (laut Spielplan)</div>
+      <div style="font-size:13px;color:var(--ink-2)">alle 15 Minuten, in der Regel 06–23 Uhr Berlin-Zeit (Sommerzeit) bzw. 05–22 Uhr (Winterzeit)</div>
+    </div>
+    <div style="background:var(--bg);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-weight:700;font-size:13px;color:var(--ink);margin-bottom:4px">Außerhalb der Turniertage</div>
+      <div style="font-size:13px;color:var(--ink-2)">kein automatischer Scrape — der Snapshot bleibt eingefroren auf dem letzten Stand</div>
+    </div>
+    <div style="background:var(--bg);border-radius:10px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-weight:700;font-size:13px;color:var(--ink);margin-bottom:4px">Turniere mit ausstehendem Spielplan</div>
+      <div style="font-size:13px;color:var(--ink-2)">App prüft adaptiv 1× pro Woche (&gt;30 Tage zum Start), 1× pro Tag (7-30 Tage), 2× pro Tag (&lt;7 Tage), und schaltet automatisch um sobald der Plan da ist</div>
+    </div>
+    <p style="margin:0;color:var(--ink-3);font-size:12.5px;line-height:1.55">
+      Der Zeitstempel oben zeigt, <strong style="color:var(--ink-2)">wann die letzten Daten geholt wurden</strong>. Wenn er länger still steht und kein Turnier läuft, ist das normal — der Scraper schläft.
+    </p>
+  </div>
+</div>
+
+<!-- QR-Code für den Beamer-Modus (im Normal-Modus per CSS ausgeblendet) -->
+<aside class="qr-container" id="qrContainer" hidden>
+  <div class="qr-label">App auf dein Handy</div>
+  <div id="qrCode"></div>
+  <div class="qr-url" id="qrUrl"></div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script src="/app.js"></script>
+<script src="/phase3.js"></script>
+</body>
+</html>

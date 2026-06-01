@@ -1,0 +1,1065 @@
+/* phase3.css — Styles für die Phase-2-6-UI-Erweiterungen */
+
+.p3-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+}
+.p3-modal { display: contents; }
+.p3-modal-content {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  max-width: 460px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.p3-modal.wide .p3-modal-content { max-width: 560px; }
+
+.p3-modal-h {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex; justify-content: space-between; align-items: start;
+}
+.p3-modal-h h3 { margin: 0; font-size: 16px; }
+.p3-subtitle { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.p3-close {
+  background: none; border: none;
+  font-size: 22px; cursor: pointer;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  color: #6b7280;
+}
+.p3-close:hover { background: #f3f4f6; color: #111; }
+
+.p3-body { padding: 16px 20px; }
+
+.p3-tabbar {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 8px;
+}
+.p3-tab {
+  flex: 1; padding: 10px 8px;
+  background: none; border: none;
+  font-size: 13px; font-weight: 500;
+  color: #6b7280;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+/* P2.8 — Tab-Active-Color auf VMW-Rot statt grün (Brand-Konsistenz). */
+.p3-tab.active {
+  color: var(--vmw-red);
+  border-bottom-color: var(--vmw-red);
+}
+
+.p3-input {
+  width: 100%; padding: 8px 10px;
+  border: 1px solid #d1d5db; border-radius: 6px;
+  font-size: 14px; box-sizing: border-box;
+  font-family: inherit;
+}
+.p3-input.small { width: auto; padding: 4px 8px; font-size: 12px; }
+
+.p3-field { margin-bottom: 12px; }
+.p3-field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.p3-hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
+
+.p3-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111;
+  font-size: 13px; cursor: pointer;
+  font-weight: 500;
+}
+/* P2.8 — Primary-Button auf VMW-Rot (Brand-Konsistenz; war Grün). */
+.p3-btn.primary { background: var(--vmw-red); color: white; border-color: var(--vmw-red); }
+.p3-btn.primary:hover { background: var(--vmw-red-dark); }
+.p3-btn.danger { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+.p3-btn.small { padding: 4px 8px; font-size: 12px; }
+
+.p3-pillrow { display: flex; flex-wrap: wrap; gap: 6px; }
+.p3-pillchoice {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 12px; cursor: pointer;
+}
+/* P2.8 — Pill-choice-active auf VMW-Rot (Brand-Konsistenz; war Grün). */
+.p3-pillchoice.active { background: var(--vmw-red); color: white; border-color: var(--vmw-red); }
+
+.p3-picker-search { padding: 12px; border-bottom: 1px solid #e5e7eb; }
+.p3-picker-filters { padding: 8px 12px; border-bottom: 1px solid #e5e7eb; }
+.p3-filter-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 6px; }
+.p3-flabel { font-size: 12px; color: #6b7280; min-width: 70px; }
+
+.p3-picker-list { max-height: 320px; overflow-y: auto; }
+.p3-picker-item {
+  padding: 10px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid #f3f4f6; cursor: pointer;
+}
+.p3-picker-item:hover { background: #f9fafb; }
+.p3-picker-item.disabled { opacity: 0.5; cursor: not-allowed; }
+.p3-picker-item.empty { font-style: italic; color: #6b7280; }
+.p3-pname { font-weight: 600; font-size: 14px; }
+.p3-pmeta { font-size: 12px; color: #6b7280; }
+.p3-pdis { font-size: 11px; color: #d97706; background: #fef3c7; padding: 2px 6px; border-radius: 4px; }
+
+.p3-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.p3-stat { background: #f9fafb; padding: 12px; border-radius: 8px; text-align: center; }
+.p3-stat-label { font-size: 11px; color: #6b7280; }
+/* P2.8 — Stat-Zahl auf VMW-Rot (Brand-Konsistenz; war Grün). */
+.p3-stat-value { font-weight: 700; font-size: 22px; color: var(--vmw-red); }
+
+.p3-section-title {
+  font-weight: 600; font-size: 13px;
+  color: #6b7280; text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 16px 0 8px; padding-bottom: 4px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.p3-list .p3-list-item {
+  display: flex; justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 13px;
+}
+.p3-list .p3-list-item:last-child { border: none; }
+
+.p3-form { display: flex; flex-direction: column; gap: 8px; }
+
+.p3-entry {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+.p3-entry-title { font-size: 13px; font-weight: 500; }
+.p3-entry-meta { font-size: 11px; color: #6b7280; }
+
+.p3-banner {
+  padding: 10px 14px;
+  border-radius: 6px; margin-bottom: 12px;
+  font-size: 13px;
+}
+.p3-banner.warning { background: #fef3c7; border-left: 3px solid #d97706; }
+.p3-banner.info    { background: #e0f2fe; border-left: 3px solid #0284c7; }
+.p3-banner.ok      { background: #ecfdf5; border-left: 3px solid #0E7C3A; }
+.p3-banner.error   { background: #fef2f2; border-left: 3px solid #dc2626; }
+
+.p3-admin-row {
+  padding: 8px 0; border-bottom: 1px solid #f3f4f6;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+.p3-row-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+.p3-code {
+  font-family: ui-monospace, monospace;
+  background: #ecfdf5; padding: 2px 8px; border-radius: 4px;
+  font-size: 12px; margin-top: 4px; display: inline-block;
+}
+.p3-badge { padding: 2px 8px; border-radius: 999px; font-size: 11px; }
+.p3-badge.muted { background: #e5e7eb; color: #6b7280; }
+
+.p3-table {
+  width: 100%; border-collapse: collapse; font-size: 12px;
+}
+.p3-table th, .p3-table td {
+  padding: 6px 4px; text-align: left; border-bottom: 1px solid #e5e7eb;
+}
+.p3-table th { background: #f9fafb; color: #6b7280; font-size: 11px; }
+.p3-table tbody tr:hover { background: #f9fafb; }
+
+.p3-team-pick { max-height: 280px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px; }
+.p3-team-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 0; cursor: pointer;
+}
+
+.p3-toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  padding: 10px 16px; border-radius: 8px;
+  color: white; background: #111;
+  z-index: 2000;
+  font-size: 14px;
+}
+.p3-toast.success { background: #0E7C3A; }
+.p3-toast.error   { background: #dc2626; }
+
+/* Connector- + Turnier-Auswahl-Karten im Wizard */
+.p3-conn-card {
+  padding: 12px 14px; margin-bottom: 8px;
+  border: 1px solid #d1d5db; border-radius: 10px;
+  cursor: pointer; background: #fff;
+}
+/* P2.8 — Connector-Card-Hover auf VMW-Rot (war Grün). */
+.p3-conn-card:hover { border-color: var(--vmw-red); background: #fafafa; }
+.p3-conn-card strong { display: block; font-size: 14px; }
+.p3-conn-card .p3-hint { margin-top: 2px; }
+
+/* Login-Code anzeigen */
+.p3-code-display {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 22px; font-weight: 700;
+  background: #ecfdf5; color: #0E7C3A;
+  padding: 16px; border-radius: 10px;
+  text-align: center; letter-spacing: 0.1em;
+  margin: 12px 0;
+  user-select: all;
+}
+
+/* Master-Admin als eigene Page */
+.p3-page { background: #f9fafb; min-height: 100vh; }
+.p3-page-wrap {
+  max-width: 900px; margin: 0 auto;
+  background: white; min-height: 100vh;
+}
+.p3-page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(200, 16, 46, 0.88);    /* VMW-Rot mit Transparenz für Blur-Effekt */
+  color: white;
+  /* Sticky-Header mit Glass-Blur — bleibt beim Scrollen oben sichtbar */
+  position: sticky; top: 0; z-index: 50;
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+}
+/* Fallback für Browser ohne backdrop-filter: voll-opake Hintergrundfarbe */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .p3-page-header { background: #C8102E; }
+}
+.p3-page-header h1 { margin: 0; font-size: 16px; flex: 1; text-align: center; }
+.p3-page-header .p3-btn { background: rgba(255,255,255,0.15); color: white; border-color: transparent; }
+.p3-page-header .p3-btn:hover { background: rgba(255,255,255,0.25); }
+
+/* P1.3 — Datenstand-Pill für External + Schiri-Einteilung-Header.
+   kayakers-Live-View hat ihre eigene `header.app .updated`-Variante (style.css).
+   Diese hier sitzt auf dem VMW-roten p3-page-header. */
+.p3-updated-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.p3-updated-pill:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.4); }
+.p3-updated-dot {
+  width: 8px; height: 8px; border-radius: 999px;
+  background: #4ADE80;   /* grün: < 20 Min */
+  flex: 0 0 auto;
+}
+.p3-updated-dot.stale { background: #F9D55A; }                  /* gelb: < 60 Min */
+.p3-updated-dot.dead  { background: rgba(255,255,255,0.45); }   /* grau: > 60 Min / kein Stamp */
+
+@media (max-width: 480px) {
+  /* Auf engen Viewports nur den Punkt zeigen, voller Text im Info-Modal. */
+  .p3-updated-pill .p3-updated-txt { display: none; }
+  .p3-updated-pill { padding: 4px 6px; }
+}
+
+/* Lineup-Page (Schiri-Einteilung) */
+.p3-lineup-filters {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  position: sticky; top: 0; z-index: 10;
+}
+.p3-lineup-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.p3-lineup-head {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; color: #6b7280; margin-bottom: 6px;
+}
+/* P2.6 — Spielnummer in Blau (Info), wie im Mockup Slide 6. */
+.p3-lineup-nr { font-weight: 700; color: #185FA5; font-size: 14px; font-variant-numeric: tabular-nums; }
+.p3-lineup-time { color: #6b7280; font-variant-numeric: tabular-nums; }
+.p3-lineup-status {
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+}
+.p3-lineup-status.p3-status-done { background: #e5e7eb; color: #4b5563; }
+.p3-lineup-status.p3-status-live { background: #fee2e2; color: #b91c1c; }
+.p3-lineup-status.p3-status-next { background: #dbeafe; color: #1e40af; }
+.p3-lineup-teams { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.p3-lineup-meta { font-size: 12px; color: #6b7280; }
+
+/* Schiri-Page-Header in VMW-Rot statt Grün */
+.p3-page-schiri .p3-page-header { background: #C8102E; }
+
+/* Collapse (eingeklappte Sektion) */
+details.p3-collapse {
+  margin-top: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: white;
+  overflow: hidden;
+}
+details.p3-collapse summary {
+  cursor: pointer; padding: 12px 16px;
+  font-weight: 600; font-size: 14px;
+  display: flex; align-items: center; gap: 4px;
+  user-select: none;
+}
+details.p3-collapse summary::-webkit-details-marker { display: none; }
+details.p3-collapse summary::before {
+  content: '▸'; margin-right: 8px; color: #6b7280;
+  transition: transform 0.15s;
+}
+details.p3-collapse[open] summary::before { transform: rotate(90deg); }
+details.p3-collapse > *:not(summary) { padding: 0 16px 16px; }
+.p3-section-title-inline { font-weight: 600; }
+
+/* Multi-Day-Row */
+.p3-multiday-row { margin-bottom: 8px; }
+.p3-conn-card-ext { border-left: 3px solid #2563eb; }
+.p3-schiri-meta {
+  color: #6b7280; font-size: 13px;
+  margin: 8px 0 16px;
+}
+
+/* Loading-Spinner für Buttons */
+.p3-spinner {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: p3-spin 0.6s linear infinite;
+  vertical-align: -2px;
+  margin-right: 4px;
+}
+@keyframes p3-spin { to { transform: rotate(360deg); } }
+.p3-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+/* Progress-Anzeige (Wizard-Discovery) */
+.p3-progress {
+  padding: 32px 20px; text-align: center;
+}
+.p3-progress-icon { font-size: 40px; margin-bottom: 12px; animation: p3-pulse 2s ease-in-out infinite; }
+.p3-progress-title { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+.p3-progress-step { color: #6b7280; font-size: 13px; min-height: 18px; margin-bottom: 12px; }
+.p3-progress-bar {
+  width: 100%; max-width: 300px; margin: 0 auto;
+  height: 4px; background: #e5e7eb; border-radius: 999px; overflow: hidden;
+}
+.p3-progress-bar-fill {
+  height: 100%; width: 30%;
+  /* P2.8 — Progress-Bar auf VMW-Rot (war Grün). */
+  background: var(--vmw-red);
+  animation: p3-progress-slide 1.5s ease-in-out infinite;
+}
+@keyframes p3-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@keyframes p3-progress-slide { 0% { margin-left: -30%; } 100% { margin-left: 100%; } }
+
+/* ───────────────────────────────────────────────────────────────────────
+   LANDING-PAGE
+   ─────────────────────────────────────────────────────────────────────── */
+
+body.p3-landing-mode { background: #f9fafb; }
+
+.p3-landing {
+  max-width: 1100px; margin: 0 auto;
+  min-height: 100vh; display: flex; flex-direction: column;
+}
+
+/* Hero mit VMW-Rot */
+.p3-hero {
+  background: linear-gradient(135deg, #C8102E 0%, #9a0c23 100%);
+  color: white;
+  padding: 24px 20px 32px;
+  box-shadow: 0 2px 12px rgba(200, 16, 46, 0.3);
+}
+.p3-hero-inner {
+  display: flex; align-items: center; gap: 20px;
+  flex-wrap: wrap;
+}
+.p3-hero-logo {
+  width: 72px; height: 72px;
+  background: white; border-radius: 50%;
+  padding: 6px; object-fit: contain;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+.p3-hero-text { flex: 1; min-width: 250px; }
+.p3-hero-text h1 { margin: 0 0 6px; font-size: 22px; font-weight: 700; }
+.p3-hero-text p { margin: 0; font-size: 14px; opacity: 0.95; line-height: 1.5; }
+.p3-hero-actions { flex-shrink: 0; }
+.p3-btn-onbrand {
+  background: rgba(255,255,255,0.95) !important;
+  color: #C8102E !important;
+  border-color: transparent !important;
+  font-weight: 600;
+}
+.p3-btn-onbrand:hover { background: white !important; }
+
+/* Listen-Sektionen */
+.p3-landing-list {
+  flex: 1; padding: 20px;
+}
+.p3-landing-section {
+  margin: 28px 0 12px;
+  font-size: 16px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+  color: #1f2937;
+}
+.p3-landing-section:first-child { margin-top: 8px; }
+.p3-section-count {
+  background: #e5e7eb; color: #6b7280;
+  padding: 2px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 500;
+  margin-left: auto;
+}
+
+/* Card-Grid */
+.p3-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.p3-tcard {
+  display: block;
+  padding: 16px 18px;
+  border: 1px solid #e5e7eb; border-radius: 14px;
+  text-decoration: none; color: #111;
+  background: linear-gradient(to bottom right, #ffffff, #fafafa);
+  /* Subtiler Resting-Shadow für mehr Tiefe, intensiviert sich smooth bei Hover */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02), 0 1px 1px rgba(0,0,0,0.03);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.p3-tcard::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px; background: #C8102E; opacity: 0.8;
+}
+.p3-tcard:hover {
+  transform: translateY(-2px);
+  border-color: #C8102E;
+  box-shadow: 0 8px 20px rgba(200, 16, 46, 0.10);
+}
+.p3-tcard-name {
+  font-weight: 700; font-size: 16px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-left: 4px;
+}
+.p3-tcard-meta {
+  font-size: 13px; color: #6b7280;
+  margin-top: 6px; margin-left: 4px;
+}
+/* Completed-State neutraler */
+.p3-tcard:has(.p3-status-completed)::before { background: #9ca3af; opacity: 0.5; }
+.p3-tcard:has(.p3-status-completed):hover { border-color: #9ca3af; box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+
+/* Status-Badge auf Cards */
+.p3-status-badge {
+  font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+/* Display-Gruppen-Klassen (datumbasiert) */
+.p3-status-running           { background: #dcfce7; color: #166534; }
+.p3-status-planned           { background: #fef3c7; color: #92400e; }
+.p3-status-draft             { background: #f3e8ff; color: #6b21a8; }
+.p3-status-completed         { background: #e5e7eb; color: #4b5563; }
+/* Legacy-Klassen (Code-Status) — bleiben fallbacks für Lineup-Status etc. */
+.p3-status-active            { background: #dcfce7; color: #166534; }
+.p3-status-awaiting-schedule { background: #fef3c7; color: #92400e; }
+
+.p3-ext-badge {
+  font-size: 11px; font-weight: 500;
+  background: #eff6ff; color: #2563eb;
+  padding: 2px 8px; border-radius: 999px;
+}
+
+/* Top-Badge: Live-Spielplan vs Externer Plan */
+.p3-typebadge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600;
+  padding: 3px 10px; border-radius: 999px;
+  margin: 0 0 8px 4px;
+  width: fit-content;
+}
+.p3-typebadge-live     { background: #FCEBEB; color: #791F1F; }
+.p3-typebadge-external { background: #F1EFE8; color: #444441; }
+
+/* VMW-Team-Kategorien-Pills */
+.p3-tcard-categories {
+  display: flex; gap: 4px; flex-wrap: wrap;
+  margin: 8px 0 4px 4px;
+}
+.p3-cat-pill {
+  font-size: 11px; color: #5F5E5A;
+  background: #F1EFE8;
+  padding: 2px 8px; border-radius: 999px;
+}
+
+/* Card-Footer mit Status + Hint */
+.p3-tcard-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 10px; margin-left: 4px; gap: 8px;
+}
+.p3-tcard-hint {
+  font-size: 11px; color: #6b7280; font-style: italic;
+}
+
+/* Externer Akzent-Balken: gestrichelt, grau (statt rot solid) */
+.p3-tcard-external::before {
+  background: repeating-linear-gradient(
+    to bottom,
+    #888780 0px, #888780 4px,
+    transparent 4px, transparent 8px
+  );
+  opacity: 1;
+}
+.p3-tcard-external:hover { border-color: #888780; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+
+/* External Multi-Day (Legacy — Phase 7 ersetzt das durch /t/<slug>-Dashboard) */
+.p3-tcard-days {
+  margin-top: 10px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.p3-day-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  text-decoration: none; color: #111;
+  font-size: 13px;
+}
+.p3-day-link:hover { background: #eff6ff; border-color: #2563eb; }
+.p3-day-date { font-weight: 600; min-width: 90px; }
+.p3-day-label { flex: 1; color: #6b7280; }
+.p3-ext-arrow { color: #2563eb; font-weight: 600; }
+
+/* Empty State */
+.p3-empty-state {
+  text-align: center; padding: 60px 20px;
+}
+.p3-empty-icon { font-size: 48px; margin-bottom: 12px; }
+.p3-empty-state h3 { margin: 0 0 8px; font-size: 18px; }
+.p3-empty-state p { margin: 0; color: #6b7280; font-size: 14px; }
+
+/* Footer */
+.p3-landing-footer {
+  border-top: 1px solid #e5e7eb;
+  padding: 20px;
+  text-align: center;
+  font-size: 12px; color: #6b7280;
+}
+.p3-landing-footer a { color: #C8102E; text-decoration: none; }
+.p3-landing-footer a:hover { text-decoration: underline; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   GLOBAL-BANNER — Master setzt Nachricht für alle Seiten
+   ═══════════════════════════════════════════════════════════════════ */
+
+.p3-global-banner {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  font-size: 13px; font-weight: 500;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.p3-global-banner-info {
+  background: #dbeafe; color: #1e40af;
+}
+.p3-global-banner-warning {
+  background: #fef3c7; color: #92400e;
+}
+.p3-global-banner-icon { font-size: 16px; flex-shrink: 0; }
+.p3-global-banner-text { flex: 1; line-height: 1.4; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   USER-AREA — zentrales Login/Logout/Profil-Element auf jeder Seite
+   ═══════════════════════════════════════════════════════════════════ */
+
+.p3-userarea {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.p3-userarea-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #111;
+  transition: background 0.15s, border-color 0.15s;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.p3-userarea-btn:hover { background: #f9fafb; border-color: #9ca3af; }
+/* On-Brand-Variante (Code Review Finding #12): auf VMW-rotem Header sollen
+   die User-Area-Buttons sekundär wirken — transparenter BG + weiße Outline
+   statt opaker weißer Pille mit dunklem Text. Padding reduziert, damit der
+   Titel die dominante optische Achse behält. */
+.p3-userarea-btn-onbrand {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 5px 10px;
+  font-size: 12.5px;
+}
+.p3-userarea-btn-onbrand:hover {
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.45);
+}
+.p3-userarea-pill {
+  border-radius: 999px;
+  padding: 4px 10px 4px 4px;
+}
+.p3-userarea-avatar {
+  width: 22px; height: 22px;
+  background: white;
+  color: #B83A2E;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+.p3-userarea-icon {
+  padding: 5px 9px;
+  min-width: 0;
+}
+.p3-userarea-logout {
+  padding: 5px 10px;
+  font-size: 12.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.p3-userarea-compact {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Mobile (<480px): Logout auf reines Icon reduzieren, "Mein Profil" auf den
+   Avatar — der Header gewinnt horizontalen Platz für den Titel zurück.
+   Den Textteil markieren wir per zusätzlichem Span, das CSS via
+   `:not(.always-show)` ausgeblendet wird. Wir nutzen einen einfachen Hack:
+   alle direkten <span>-Children außer Avatar/Icon werden ausgeblendet. */
+@media (max-width: 480px) {
+  .p3-userarea { gap: 4px; }
+  .p3-userarea-btn { padding: 5px 8px; font-size: 12px; }
+  .p3-userarea-btn-onbrand { padding: 5px 8px; font-size: 12px; }
+  .p3-userarea-logout { padding: 5px 8px; gap: 0; font-size: 13px; }
+  /* Auf der Master-Admin-/Einteilung-Pille bleibt das Label sichtbar
+     (kommt direkt als Textknoten, nicht im span gewrappt). */
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STATUS-STREIFEN + JAHRES-TABS (Landing v2)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.p3-statusbar {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 20px;
+  background: rgba(248, 247, 242, 0.85);    /* leicht transparent für Glass-Effekt */
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+  color: #444441;
+  flex-wrap: wrap;
+  /* Sticky beim Scrollen — Filter bleiben oben sichtbar */
+  position: sticky; top: 0; z-index: 40;
+  backdrop-filter: saturate(180%) blur(10px);
+  -webkit-backdrop-filter: saturate(180%) blur(10px);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .p3-statusbar { background: #F8F7F2; }
+}
+.p3-stats-line {
+  display: flex; align-items: center; gap: 8px;
+  flex: 1; min-width: 0;
+}
+.p3-stat-num { font-weight: 600; color: #B83A2E; }
+.p3-stat-num.live { color: #185FA5; }
+.p3-stat-sep { color: #d1d5db; }
+
+.p3-yeartabs { display: flex; gap: 4px; }
+.p3-yeartab {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px; font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.p3-yeartab:hover { background: white; border-color: #e5e7eb; }
+.p3-yeartab.active {
+  background: white;
+  border-color: #d1d5db;
+  color: #444441;
+}
+
+/* Beendet-Section als <details> */
+.p3-completed-details {
+  margin-top: 16px;
+}
+.p3-completed-details summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.p3-completed-details summary::-webkit-details-marker { display: none; }
+.p3-landing-section-toggle {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 0;
+}
+.p3-landing-section-toggle::before {
+  content: '▸';
+  font-size: 12px;
+  color: #9ca3af;
+  transition: transform 0.15s ease;
+}
+.p3-completed-details[open] .p3-landing-section-toggle::before {
+  transform: rotate(90deg);
+}
+.p3-toggle-hint {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   EXTERNAL TOURNAMENT DASHBOARD (Phase 7)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.p3-page-title-wrap {
+  flex: 1;
+  text-align: center;
+}
+.p3-page-title-wrap h1 {
+  font-size: 18px; margin: 0;
+}
+/* BUGFIX_EXTERNES_TURNIER#B — vorher color:#6b7280 (Grau) auf VMW-Rot;
+   das war Kontrastverhältnis ~2.1:1, weit unter WCAG-AA (4.5:1). Jetzt
+   weiß mit 85% Opacity → ~5.4:1, lesbar in beiden Light-/Dark-Modi. */
+.p3-page-sub {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 12px; color: rgba(255,255,255,0.85);
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+/* Ressourcen-Section */
+.p3-ext-resources {
+  margin-bottom: 24px;
+}
+.p3-ext-noresource .p3-hint {
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 13px;
+}
+.p3-ext-resource-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  background: #f8f7f2;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  text-decoration: none; color: #111;
+  transition: background 0.15s, border-color 0.15s;
+}
+.p3-ext-resource-card:hover {
+  background: #fff;
+  border-color: #C8102E;
+}
+.p3-ext-resource-icon {
+  font-size: 24px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.p3-ext-resource-text { flex: 1; }
+.p3-ext-resource-title { font-weight: 500; font-size: 14px; }
+.p3-ext-resource-host { font-size: 12px; color: #6b7280; }
+.p3-ext-resource-type {
+  font-size: 11px; color: #6b7280;
+  background: #f3f4f6; padding: 2px 8px; border-radius: 999px;
+}
+
+/* Einsatz-Liste */
+.p3-ext-einsatz-section {
+  margin-bottom: 24px;
+}
+.p3-ext-einsatz-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.p3-ext-einsatz-list {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.p3-ext-entry-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+.p3-ext-entry-head {
+  display: flex; align-items: baseline; gap: 10px;
+  margin-bottom: 8px;
+}
+.p3-ext-entry-nr { font-weight: 600; font-size: 13px; }
+.p3-ext-entry-meta { font-size: 12px; color: #6b7280; flex: 1; }
+.p3-ext-entry-actions { display: flex; gap: 6px; }
+.p3-ext-entry-roles {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);   /* alle 7 Rollen: ref1,ref2,scorer,timer,shotclock,line1,line2 */
+  gap: 4px; font-size: 11px;
+}
+.p3-ext-role-cell {
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+.p3-ext-role-cell.is-me {
+  background: #FCEBEB;
+  color: #791F1F;
+  font-weight: 500;
+}
+.p3-ext-role-label { color: #9ca3af; font-size: 10px; margin-bottom: 1px; }
+.p3-ext-role-name { font-weight: 500; }
+.p3-ext-entry-notes {
+  margin-top: 8px;
+  font-size: 12px; color: #6b7280;
+  background: #f9fafb;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+.p3-ext-footer-hint {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 11px; color: #9ca3af;
+}
+.p3-empty-soft {
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  font-size: 13px; color: #6b7280;
+}
+
+/* Modal (für Anlege-/Edit-Formular) */
+.p3-modal-bg {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.p3-modal-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 100%; max-width: 480px;
+  max-height: 90vh; overflow-y: auto;
+}
+.p3-modal-card h2 { margin: 0 0 16px; font-size: 18px; }
+.p3-formrow {
+  display: flex; flex-direction: column;
+  margin-bottom: 12px;
+}
+.p3-formrow-label {
+  font-size: 12px; color: #6b7280;
+  margin-bottom: 4px;
+}
+.p3-formrow input, .p3-formrow select {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+}
+.p3-formrow input:focus, .p3-formrow select:focus {
+  outline: none;
+  border-color: #C8102E;
+  box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.12);
+}
+.p3-modal-actions {
+  display: flex; justify-content: flex-end; gap: 8px;
+  margin-top: 16px;
+}
+
+/* Kleine Button-Varianten */
+.p3-btn.xsmall {
+  font-size: 11px; padding: 3px 8px;
+}
+.p3-btn.danger {
+  background: #fef2f2; color: #991b1b; border-color: #fecaca;
+}
+.p3-btn.danger:hover { background: #fee2e2; }
+.p3-btn.small.primary,
+.p3-btn.primary.small {
+  background: #C8102E; color: white; border-color: #C8102E;
+}
+.p3-btn.small.primary:hover,
+.p3-btn.primary.small:hover { background: #a00d24; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   P2 — UI-KOMPONENTEN-BIBLIOTHEK (additiv, ersetzt bestehende Klassen nicht)
+   Verwendung schrittweise pro Screen-Migration (siehe IMPLEMENTATION_PLAN).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Cards */
+.ui-card {
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--sp-4);
+}
+.ui-card-elev { box-shadow: var(--shadow-elev); }
+.ui-card-flat { box-shadow: none; border: 1px solid var(--bg-muted); }
+.ui-card-interactive {
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.15s;
+}
+.ui-card-interactive:hover { box-shadow: var(--shadow-elev); }
+.ui-card-interactive:active { transform: scale(0.99); }
+
+/* Pills */
+.ui-pill {
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  font-size: 11px; font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.ui-pill-live    { background: var(--pill-live-bg);    color: var(--pill-live-ink); }
+.ui-pill-planned { background: var(--pill-planned-bg); color: var(--pill-planned-ink); }
+.ui-pill-done    { background: var(--pill-done-bg);    color: var(--pill-done-ink); }
+.ui-pill-extern  { background: var(--pill-extern-bg);  color: var(--pill-extern-ink); }
+.ui-pill-class   { background: var(--pill-class-bg);   color: var(--pill-class-ink); }
+.ui-pill .dot {
+  width: 6px; height: 6px; border-radius: 999px;
+  background: currentColor;
+}
+
+/* Lizenz-Letter */
+.ui-lizenz {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px;
+  border-radius: var(--r-pill);
+  font-size: 10px; font-weight: 700; color: white;
+  flex: 0 0 auto;
+}
+.ui-lizenz-a   { background: var(--lizenz-a); }
+.ui-lizenz-b   { background: var(--lizenz-b); }
+.ui-lizenz-c   { background: var(--lizenz-c); }
+.ui-lizenz-plz { background: var(--lizenz-plz); }
+.ui-lizenz-icf { background: var(--lizenz-icf); }
+
+/* Section-Header mit Indicator + Counter */
+.ui-section-h {
+  display: flex; align-items: center; gap: var(--sp-2);
+  margin: var(--sp-5) 0 var(--sp-3);
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--ink-2);
+}
+.ui-section-h .dot {
+  width: 8px; height: 8px; border-radius: var(--r-pill);
+  flex: 0 0 auto;
+}
+.ui-section-h .dot-live    { background: var(--pill-live-ink); }
+.ui-section-h .dot-planned { background: var(--pill-planned-ink); }
+.ui-section-h .dot-done    { background: var(--ink-3); }
+.ui-section-h .counter {
+  margin-left: auto;
+  background: var(--bg-muted); color: var(--ink-2);
+  border-radius: var(--r-pill); padding: 0 8px;
+  font-size: 11px; font-weight: 600;
+}
+.ui-section-h .caret {
+  margin-left: var(--sp-2);
+  color: var(--ink-3);
+  font-size: 14px;
+  transition: transform 0.15s;
+}
+.ui-section-h[data-collapsed="true"] .caret { transform: rotate(-90deg); }
+/* Wenn ui-section-h als <summary> verwendet wird, default-Marker wegblenden,
+   damit nur der eigene .caret sichtbar ist. */
+summary.ui-section-h { list-style: none; cursor: pointer; user-select: none; }
+summary.ui-section-h::-webkit-details-marker { display: none; }
+
+/* Buttons */
+.ui-btn {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  padding: 8px 14px;
+  border-radius: var(--r-md);
+  font-size: 14px; font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.05s;
+}
+.ui-btn:active { transform: scale(0.97); }
+.ui-btn-primary { background: var(--vmw-red); color: white; }
+.ui-btn-primary:hover { background: var(--vmw-red-dark); }
+.ui-btn-ghost   { background: transparent; color: var(--ink); border-color: var(--bg-muted); }
+.ui-btn-ghost:hover { background: var(--bg-muted); }
+.ui-btn-sm { padding: 4px 10px; font-size: 12px; }
+
+/* Stats-Tile (für Mein Profil) */
+.ui-stat-tile {
+  background: var(--card);
+  border-radius: var(--r-lg);
+  padding: var(--sp-4);
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+}
+.ui-stat-tile .num {
+  font-size: 32px; font-weight: 700; color: var(--vmw-red);
+  line-height: 1; margin-bottom: var(--sp-2);
+  font-variant-numeric: tabular-nums;
+}
+.ui-stat-tile .lbl { font-size: 12px; color: var(--ink-2); }
+
+/* Avatar-Initialen-Kreis */
+.ui-avatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: var(--r-pill);
+  background: var(--vmw-red); color: white;
+  font-weight: 700; font-size: 16px;
+  flex: 0 0 auto;
+}
+.ui-avatar-lg { width: 64px; height: 64px; font-size: 22px; }

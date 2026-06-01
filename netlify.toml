@@ -1,0 +1,86 @@
+[build]
+  publish    = "public"
+  functions  = "netlify/functions"
+
+# Functions, die die DKV-PDF-Vorlage zur Laufzeit lesen, müssen die
+# Asset-Datei in ihren Function-Bundle einschließen (Netlify bundlet
+# Funktionen mit esbuild und liest sonst nichts außerhalb der Function-Files).
+[functions."me"]
+  included_files = ["assets/dkv-einsatzbogen-vorlage.pdf"]
+
+[functions."admin"]
+  included_files = ["assets/dkv-einsatzbogen-vorlage.pdf"]
+
+# ────────────────────────────────────────────────────────────────────────────
+# API-Routen (friendly URLs vor SPA-Routing!)
+# ────────────────────────────────────────────────────────────────────────────
+
+# Public APIs
+[[redirects]]
+  from   = "/api/data"
+  to     = "/.netlify/functions/data"
+  status = 200
+
+[[redirects]]
+  from   = "/api/tournaments"
+  to     = "/.netlify/functions/tournaments-list"
+  status = 200
+
+# Public Schiri-Stats: /api/club/referees/<id>/stats
+[[redirects]]
+  from   = "/api/club/referees/*/stats"
+  to     = "/.netlify/functions/public-referee-stats"
+  status = 200
+
+# Public Banner: /api/banner
+[[redirects]]
+  from   = "/api/banner"
+  to     = "/.netlify/functions/banner"
+  status = 200
+
+# Auth
+[[redirects]]
+  from   = "/api/auth/referee-login"
+  to     = "/.netlify/functions/auth-login"
+  status = 200
+
+# Schiri-Self-Service
+[[redirects]]
+  from   = "/api/me/*"
+  to     = "/.netlify/functions/me/:splat"
+  status = 200
+
+# Admin (Trainer + Master)
+[[redirects]]
+  from   = "/api/admin/*"
+  to     = "/.netlify/functions/admin/:splat"
+  status = 200
+
+# ────────────────────────────────────────────────────────────────────────────
+# SPA-Routing
+# ────────────────────────────────────────────────────────────────────────────
+[[redirects]]
+  from   = "/t/*"
+  to     = "/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/me/*"
+  to     = "/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/admin"
+  to     = "/index.html"
+  status = 200
+
+# Statics & Cache
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
