@@ -22,6 +22,10 @@ import {
 } from '../../lib/einsatzbogen.mjs';
 import { listExternalEntriesForReferee } from '../../lib/externalAssignments.mjs';
 import { buildCacheHeadersShort } from '../../lib/cacheHeaders.mjs';
+// N1 — Persistenz via Index-Pattern (siehe lib/manualEntries.mjs). Ersetzt
+// die direkten store.list-Aufrufe, die wegen Eventual-Consistency dazu führten,
+// dass frische Einträge erst nach Sekunden bis Minuten sichtbar wurden.
+import * as manualEntries from '../../lib/manualEntries.mjs';
 
 const STORE = 'club';
 const MANUAL_KEY = (refId, entryId) => `manualEntries/${refId}/${entryId}.json`;
@@ -120,44 +124,35 @@ async function createManualEntry(req, refereeId) {
     return badRequest(`Schiri mit Klasse ${ref.level} darf nicht ${body.role}`);
   }
 
-  const id = randomUUID();
-  const entry = {
-    id,
-    refereeId,
+  // N1 — Persistenz via Index-Helper (schreibt Volldatensatz + Index strong-konsistent)
+  const entry = await manualEntries.createManualEntry(refereeId, {
     tournamentName: body.tournamentName.trim(),
     tournamentDate: body.tournamentDate,
     matchNr:        (body.matchNr || '').toString().trim(),
     matchLabel:     (body.matchLabel || '').trim(),
     role:           body.role,
-    // N2 — Spielklasse für DKV-PDF (wird via division → SPIELKLASSE_TO_COLUMN
-    // in die richtige Bogen-Spalte gemappt). Optional → null falls nicht gesetzt.
     spielklasse:    SPIELKLASSEN.includes(body.spielklasse) ? body.spielklasse : null,
     notes:          (body.notes || '').trim(),
-    createdAt:      new Date().toISOString(),
-    createdBy:      'self',
-  };
-  const store = getStore(STORE);
-  await store.setJSON(MANUAL_KEY(refereeId, id), entry);
+  });
   return jsonResponse({ ok: true, entry }, { status: 201 });
 }
 
 async function updateManualEntry(req, refereeId, entryId) {
   let body; try { body = await req.json(); } catch { body = null; }
-  const store = getStore(STORE);
-  const existing = await store.get(MANUAL_KEY(refereeId, entryId), { type: 'json', consistency: 'strong' });
+  const existing = await manualEntries.getManualEntry(refereeId, entryId);
   if (!existing) return notFound();
   const err = validateManualEntry({ ...existing, ...body });
   if (err) return badRequest(err);
-  const merged = { ...existing, ...body, updatedAt: new Date().toISOString() };
-  await store.setJSON(MANUAL_KEY(refereeId, entryId), merged);
+  // N1 — Update via Index-Helper (strong-konsistenter Merge + Index-Sync)
+  const merged = await manualEntries.updateManualEntry(refereeId, entryId, body || {});
+  if (!merged) return notFound();
   return jsonResponse({ ok: true, entry: merged });
 }
 
 async function deleteManualEntry(refereeId, entryId) {
-  const store = getStore(STORE);
-  const existing = await store.get(MANUAL_KEY(refereeId, entryId), { type: 'json' });
-  if (!existing) return notFound();
-  await store.delete(MANUAL_KEY(refereeId, entryId));
+  // N1 — Delete via Index-Helper (Volldatensatz + Index-Eintrag entfernen)
+  const ok = await manualEntries.deleteManualEntry(refereeId, entryId);
+  if (!ok) return notFound();
   return jsonResponse({ ok: true, id: entryId, deleted: true });
 }
 

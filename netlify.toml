@@ -74,6 +74,12 @@
   to     = "/index.html"
   status = 200
 
+# N2 — Persistente Profil-URL nach Browser-Refresh.
+[[redirects]]
+  from   = "/profil"
+  to     = "/index.html"
+  status = 200
+
 # Statics & Cache
 [[headers]]
   for = "/*.html"

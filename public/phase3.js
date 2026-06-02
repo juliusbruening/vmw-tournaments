@@ -1046,6 +1046,12 @@
   // ═══════════════════════════════════════════════════════════════════
   window.openMyProfile = async function() {
     closeModal();
+    // N2 — URL auf /profil setzen, damit Browser-Refresh den User im Profil
+    // hält statt auf der Landing zu landen. Idempotent (kein doppelter
+    // History-Eintrag bei wiederholtem Profil-Mutations-Refresh).
+    if (window.location.pathname !== '/profil') {
+      window.history.pushState({}, '', '/profil');
+    }
     // SOFORT Loading-State rendern, NICHT auf den Fetch warten. Sonst bleibt der
     // User auf der vorherigen Page (z.B. External-Dashboard) und denkt "lädt nicht".
     document.body.innerHTML = '';
@@ -2152,12 +2158,18 @@
     }
 
     // ─── Schritt 1: Tournament-Liste aus Connector ───────────────────
+    // N3 — keine Backend-country-Filterung mehr. Wir holen alle Tournaments
+    // einmal und filtern client-seitig per Pill. Damit:
+    //   - sind internationale Turniere zugänglich (~1-2 pro Jahr).
+    //   - sehen wir die verfügbaren Länder dynamisch aus dem Result statt
+    //     einer statischen Liste.
+    //   - kein zusätzlicher Round-Trip beim Wechsel zwischen Filtern.
     async function loadConnectorTournaments(connectorId) {
       resultBox.innerHTML = '';
       resultBox.appendChild(h('div', { class: 'p3-hint', style: 'padding:20px; text-align:center' }, '🔄 Lade Turnier-Liste …'));
 
       try {
-        const result = await api(`/api/admin/discover/list?connector=${encodeURIComponent(connectorId)}&country=DE`);
+        const result = await api(`/api/admin/discover/list?connector=${encodeURIComponent(connectorId)}`);
         renderConnectorTournamentList(connectorId, result.tournaments || []);
       } catch (e) {
         toast('Liste konnte nicht geladen werden: ' + e.message, 'error');
@@ -2173,8 +2185,19 @@
       resultBox.appendChild(h('div', { class: 'p3-section-title' }, `${list.length} Turniere gefunden`));
 
       const today = new Date().toISOString().slice(0, 10);
-      let timeFilter = 'upcoming';   // 'upcoming' | 'past' | 'all'
-      let search = '';
+      let timeFilter    = 'upcoming';   // 'upcoming' | 'past' | 'all'
+      let countryFilter = 'DE';         // N3 — 'DE' default | 'all' | sonst Country-Code
+      let search        = '';
+
+      // Verfügbare Länder dynamisch aus dem Result ableiten — so passen sich
+      // die Pills automatisch an, wenn kayakers neue Länder zeigt.
+      const availableCountries = [...new Set(
+        list.map(t => t.countryCode).filter(Boolean)
+      )].sort();
+      // DE zuerst (90% Use-Case), dann der Rest alphabetisch
+      const countryOrder = availableCountries.includes('DE')
+        ? ['DE', ...availableCountries.filter(c => c !== 'DE')]
+        : availableCountries;
 
       const filterRow = h('div', { class: 'p3-pillrow', style: 'margin-bottom:8px' });
       [['upcoming', 'Bevorstehend'], ['past', 'Vergangen'], ['all', 'Alle']].forEach(([k, label]) => {
@@ -2186,6 +2209,28 @@
           render();
         };
         filterRow.appendChild(btn);
+      });
+
+      // N3 — Country-Filter-Row (zweite Pill-Reihe darunter)
+      const countryRow = h('div', { class: 'p3-pillrow', style: 'margin-bottom:8px' });
+      const countryLabel = h('span', { class: 'p3-flabel', style: 'margin-right:4px' }, 'Land:');
+      countryRow.appendChild(countryLabel);
+      const countryOptions = [
+        { value: 'all', label: 'Alle Länder' },
+        ...countryOrder.map(c => ({ value: c, label: c })),
+      ];
+      countryOptions.forEach(opt => {
+        const btn = h('button', {
+          class: 'p3-pillchoice country-pill' + (countryFilter === opt.value ? ' active' : ''),
+          'data-country': opt.value,
+        }, opt.label);
+        btn.onclick = () => {
+          countryFilter = opt.value;
+          countryRow.querySelectorAll('.country-pill').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          render();
+        };
+        countryRow.appendChild(btn);
       });
 
       const searchInput = h('input', {
@@ -2202,6 +2247,8 @@
         let filtered = list.filter(t => {
           if (timeFilter === 'upcoming' && t.dateIso && t.dateIso < today) return false;
           if (timeFilter === 'past'     && t.dateIso && t.dateIso >= today) return false;
+          // N3 — Country-Filter (clientseitig)
+          if (countryFilter !== 'all' && t.countryCode !== countryFilter) return false;
           if (!ft) return true;
           return t.name.toLowerCase().includes(ft)
               || (t.countryCode || '').toLowerCase().includes(ft)
@@ -2236,6 +2283,7 @@
       }
 
       resultBox.appendChild(filterRow);
+      resultBox.appendChild(countryRow);     // N3 — Country-Filter unterhalb der Zeit-Pills
       resultBox.appendChild(searchInput);
       resultBox.appendChild(listEl);
       render();
@@ -3138,12 +3186,28 @@
       const code = meMatch[1];
       localStorage.setItem('refereeAuth', code);
       window.state.refereeAuth = code;
-      // URL aufräumen und Profil öffnen
-      window.history.replaceState({}, '', '/');
-      // Body leeren, dann Landing + Profil
+      // N2 — URL auf /profil statt /. Damit hält ein Browser-Refresh den User
+      // im Profil. Sauberes Bookmark-Verhalten: `/me/CODE` → Login → `/profil`.
+      window.history.replaceState({}, '', '/profil');
       document.body.innerHTML = '';
       showBody();
-      window.renderLanding();
+      window.openMyProfile();
+      return;
+    }
+
+    // N2 — /profil — eigene Route für persistente Profil-URL nach Refresh.
+    // Erfordert eingeloggten Schiri (refereeAuth in localStorage). Sonst:
+    // Fallback auf Landing mit Hinweis.
+    if (pathname === '/profil' || pathname === '/profil/') {
+      if (!window.state.refereeAuth) {
+        showBody();
+        window.renderLanding();
+        if (typeof window.toast === 'function') {
+          window.toast('Bitte zuerst als Schiri einloggen', 'info');
+        }
+        return;
+      }
+      showBody();
       window.openMyProfile();
       return;
     }
