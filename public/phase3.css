@@ -405,6 +405,36 @@ body.p3-landing-mode { background: #f9fafb; }
 .p3-hero-text h1 { margin: 0 0 6px; font-size: 22px; font-weight: 700; }
 .p3-hero-text p { margin: 0; font-size: 14px; opacity: 0.95; line-height: 1.5; }
 .p3-hero-actions { flex-shrink: 0; }
+
+/* P1.5 — Inline-Info-Button (?) neben der Hero-Tagline, öffnet ein
+   Modal mit der vollen Erklärung. */
+.p3-hero-tagline { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.p3-hero-info-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: white;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s;
+}
+.p3-hero-info-btn:hover { background: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.55); }
+
+/* P1.5 — Mobile: Hero kompakter, damit die erste Tournament-Karte
+   ohne Scrollen sichtbar wird. */
+@media (max-width: 480px) {
+  .p3-hero { padding: 16px 16px 20px; }
+  .p3-hero-inner { gap: 12px; }
+  .p3-hero-logo { width: 48px; height: 48px; padding: 4px; }
+  .p3-hero-text { min-width: 0; }
+  .p3-hero-text h1 { font-size: 18px; margin-bottom: 4px; }
+  .p3-hero-text p { font-size: 13px; line-height: 1.4; }
+}
 .p3-btn-onbrand {
   background: rgba(255,255,255,0.95) !important;
   color: #C8102E !important;
@@ -842,10 +872,20 @@ body.p3-landing-mode { background: #f9fafb; }
 .p3-ext-entry-nr { font-weight: 600; font-size: 13px; }
 .p3-ext-entry-meta { font-size: 12px; color: #6b7280; flex: 1; }
 .p3-ext-entry-actions { display: flex; gap: 6px; }
+/* N3 — Rollen-Grid responsiv. `minmax(0, 1fr)` verhindert, dass lange
+   Schiri-Namen die Spalte überstrecken (Default-Min-Content kollidiert mit
+   `1fr`). Mediaqueries: 2 Spalten auf Mobile (4 Reihen × 2), 4 Spalten
+   zwischen Mobile und Desktop, 7 Spalten auf Desktop. */
 .p3-ext-entry-roles {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);   /* alle 7 Rollen: ref1,ref2,scorer,timer,shotclock,line1,line2 */
+  grid-template-columns: repeat(7, minmax(0, 1fr));   /* alle 7 Rollen: ref1,ref2,scorer,timer,shotclock,line1,line2 */
   gap: 4px; font-size: 11px;
+}
+@media (max-width: 640px) {
+  .p3-ext-entry-roles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 641px) and (max-width: 900px) {
+  .p3-ext-entry-roles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 .p3-ext-role-cell {
   background: #f9fafb;

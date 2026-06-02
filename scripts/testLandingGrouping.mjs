@@ -81,5 +81,40 @@ expect('single-day Turnier heute → running',
   displayGroup({ status: 'active', dates: ['2026-06-10'] }, '2026-06-10'),
   'running');
 
-console.log(`\n${fail === 0 ? '✅' : '❌'} ${pass} pass, ${fail} fail`);
-process.exitCode = fail === 0 ? 0 : 1;
+// ─── P1.4 — vmwCategoriesFor / autoDetectCategory: Herren-Detection mit Men2 ──
+import('../lib/tournaments.mjs').then(({ vmwCategoriesFor }) => {
+  function expectSet(label, actual, expected) {
+    const ok = actual.length === expected.length && expected.every(e => actual.includes(e));
+    if (ok) { console.log('✓ ' + label); pass++; }
+    else    { console.log('✗ ' + label + ` — expected [${expected.join(',')}], got [${actual.join(',')}]`); fail++; }
+  }
+
+  // DC2026-Fall: Men2 muss als 'herren' erkannt werden
+  expectSet('P1.4: Team-Code Men2 → herren',
+    vmwCategoriesFor({ ourTeams: [{ code: 'Men2', name: 'VMW Berlin Men2' }] }),
+    ['herren']);
+
+  // Alle 5 Kategorien zusammen (DC2026-ähnliches Setup)
+  expectSet('P1.4: U14 + U16 + U21 + Women + Men2 → alle 5 Kategorien',
+    vmwCategoriesFor({ ourTeams: [
+      { code: 'U14',   name: 'VMW Berlin U14'   },
+      { code: 'U16',   name: 'VMW Berlin U16'   },
+      { code: 'U21',   name: 'VMW Berlin U21'   },
+      { code: 'Women', name: 'VMW Berlin Women' },
+      { code: 'Men2',  name: 'VMW Berlin Men2'  },
+    ]}),
+    ['schueler', 'jugend', 'junioren', 'damen', 'herren']);
+
+  // Men ohne Suffix matcht weiterhin (Regression-Schutz)
+  expectSet('P1.4: Team-Code Men → herren',
+    vmwCategoriesFor({ ourTeams: [{ code: 'Men', name: 'VMW Berlin Men' }] }),
+    ['herren']);
+
+  // Negativer Fall: Women darf NICHT als herren matchen
+  expectSet('P1.4: Women bleibt damen (kein herren-Leak)',
+    vmwCategoriesFor({ ourTeams: [{ code: 'Women', name: 'VMW Berlin Women' }] }),
+    ['damen']);
+
+  console.log(`\n${fail === 0 ? '✅' : '❌'} ${pass} pass, ${fail} fail`);
+  process.exitCode = fail === 0 ? 0 : 1;
+});

@@ -21,9 +21,14 @@ import {
   listAutoEntriesForReferee as listAutoEntriesShared,
 } from '../../lib/einsatzbogen.mjs';
 import { listExternalEntriesForReferee } from '../../lib/externalAssignments.mjs';
+import { buildCacheHeadersShort } from '../../lib/cacheHeaders.mjs';
 
 const STORE = 'club';
 const MANUAL_KEY = (refId, entryId) => `manualEntries/${refId}/${entryId}.json`;
+
+// N2 — Erlaubte Werte für `spielklasse` analog zu lib/externalAssignments.mjs.
+// Wird im DKV-PDF von dkvPdf.mjs#SPIELKLASSE_TO_COLUMN gebraucht.
+const SPIELKLASSEN = ['herren', 'damen', 'junioren', 'jugend', 'schueler'];
 
 export default async (req) => {
   const role = await getRole(req);
@@ -42,7 +47,9 @@ export default async (req) => {
     const { loginCode, notes, ...publicView } = ref;
     return new Response(JSON.stringify({ ok: true, referee: publicView }), {
       status: 200,
-      headers: { 'content-type': 'application/json', 'cache-control': 'private, max-age=5' },
+      // N1 — Cache via zentralem Helper: private,max-age=5 + cdn no-store + Vary,
+      // damit Browser nach POST/DELETE keine stale Antwort serviert.
+      headers: { 'content-type': 'application/json', ...buildCacheHeadersShort(true) },
     });
   }
 
@@ -74,7 +81,9 @@ export default async (req) => {
       manualEntries: manual,
     }), {
       status: 200,
-      headers: { 'content-type': 'application/json', 'cache-control': 'private, max-age=5' },
+      // N1 — Cache via zentralem Helper: private,max-age=5 + cdn no-store + Vary,
+      // damit Browser nach POST/DELETE keine stale Antwort serviert.
+      headers: { 'content-type': 'application/json', ...buildCacheHeadersShort(true) },
     });
   }
 
@@ -120,6 +129,9 @@ async function createManualEntry(req, refereeId) {
     matchNr:        (body.matchNr || '').toString().trim(),
     matchLabel:     (body.matchLabel || '').trim(),
     role:           body.role,
+    // N2 — Spielklasse für DKV-PDF (wird via division → SPIELKLASSE_TO_COLUMN
+    // in die richtige Bogen-Spalte gemappt). Optional → null falls nicht gesetzt.
+    spielklasse:    SPIELKLASSEN.includes(body.spielklasse) ? body.spielklasse : null,
     notes:          (body.notes || '').trim(),
     createdAt:      new Date().toISOString(),
     createdBy:      'self',
@@ -178,6 +190,10 @@ function validateManualEntry(entry) {
   if (!entry.tournamentName || typeof entry.tournamentName !== 'string') return 'tournamentName required';
   if (!entry.tournamentDate || !/^\d{4}-\d{2}-\d{2}$/.test(entry.tournamentDate)) return 'tournamentDate must be YYYY-MM-DD';
   if (!entry.role || !ROLES.some(r => r.code === entry.role)) return 'role muss eine bekannte Rolle sein';
+  // N2 — spielklasse optional (Legacy-Einträge bleiben valide), wenn gesetzt: prüfen.
+  if (entry.spielklasse && !SPIELKLASSEN.includes(entry.spielklasse)) {
+    return `spielklasse muss eine von ${SPIELKLASSEN.join(', ')} sein`;
+  }
   return null;
 }
 

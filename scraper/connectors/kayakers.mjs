@@ -27,63 +27,7 @@ export const kayakersConnector = {
    */
   async listAvailableTournaments({ country = null } = {}) {
     const html = await fetchHtml(`${BASE_ORIGIN}/`);
-    const $ = cheerio.load(html);
-    const seen = new Set();
-    const tournaments = [];
-
-    $('a[href*="/View/"]').each((_, a) => {
-      const href = $(a).attr('href') || '';
-      const slugMatch = href.match(/\/View\/([^?&"]+)/);
-      if (!slugMatch) return;
-      const slug = slugMatch[1];
-      const name = $(a).text().trim();
-      if (!name || seen.has(slug)) return;
-      seen.add(slug);
-
-      // Land + Datum stehen in voranstehenden H4-Elementen.
-      // Robuster: durchsuche alle prev-Geschwister bis 5 Elemente nach Datum-Pattern,
-      // statt nur prev('h4'). Strukturänderungen auf kayakers.nl waren der Bug-Grund.
-      const parent = $(a).closest('h4').length ? $(a).closest('h4') : $(a).parent();
-      const text = parent.text();
-      const countryMatch = text.match(/\((\w{2})\)\s*$/);
-      const countryCode = countryMatch ? countryMatch[1] : null;
-
-      // Erst direkter Vorgänger probieren
-      let dateHeader = parent.prev('h4').first().text().trim();
-      if (!dateHeader || !/(Jan|Feb|Mar|Mär|Apr|May|Mai|Jun|Jul|Aug|Sep|Oct|Okt|Nov|Dec|Dez)/i.test(dateHeader)) {
-        // Fallback: bis zu 5 Geschwister nach oben durchsuchen
-        parent.prevAll().slice(0, 5).each((_, el) => {
-          const txt = $(el).text().trim();
-          if (txt && /(Jan|Feb|Mar|Mär|Apr|May|Mai|Jun|Jul|Aug|Sep|Oct|Okt|Nov|Dec|Dez)/i.test(txt)) {
-            dateHeader = txt;
-            return false;
-          }
-        });
-      }
-
-      // Datum als ISO parsen für Sortierung + Upcoming/Past-Filter
-      const dateIso = parseDateRangeStart(dateHeader);
-
-      tournaments.push({
-        slug,
-        name,
-        viewUrl: `${BASE_ORIGIN}/View/${slug}`,
-        countryCode,
-        dateRange: dateHeader || null,
-        dateIso,                                  // YYYY-MM-DD oder null
-      });
-    });
-
-    // Sortieren chronologisch (jüngste zuerst)
-    tournaments.sort((a, b) => {
-      const da = a.dateIso || '0000-00-00';
-      const db = b.dateIso || '0000-00-00';
-      return db.localeCompare(da);
-    });
-
-    return country
-      ? tournaments.filter(t => t.countryCode === country)
-      : tournaments;
+    return parseListingHtml(html, { country });
   },
 
   /**
@@ -369,4 +313,77 @@ function extractDateHintsFromHtml(html) {
     break;
   }
   return dates;
+}
+
+/**
+ * N4 — Pure-Function-Variante: parst die Listing-Seite via strukturierter Daten
+ * (data-country, eventItem-id-Suffix, span.dates) statt brüchiger prev('h4')-Suche.
+ *
+ * Exportiert für Test in scripts/testKayakersListing.mjs gegen die Fixture
+ * tests/fixtures/kayakers-listing.html.
+ *
+ * Eingabe:  HTML-String der kayakers.nl-Homepage
+ * Optionen: { country: 'DE' | 'NL' | ... | null }  — filtert nach data-country
+ * Ausgabe:  [{ slug, name, viewUrl, countryCode, dateRange, dateIso }]
+ *           dateIso (YYYY-MM-DD) wird aus dem `id="eventItem-...-YYYYMMDD"`-Suffix
+ *           extrahiert — keine Text-Heuristik mehr.
+ *           Sortierung: aufsteigend nach dateIso (bevorstehende zuerst).
+ */
+export function parseListingHtml(html, { country = null } = {}) {
+  const $ = cheerio.load(html);
+  const seen = new Set();
+  const tournaments = [];
+
+  $('div.eventItem').each((_, item) => {
+    const $item = $(item);
+    const $a = $item.find('a[href*="/View/"]').first();
+    if (!$a.length) return;
+
+    const href = $a.attr('href') || '';
+    const slugMatch = href.match(/\/View\/([^?&"]+)/);
+    if (!slugMatch) return;
+    const slug = slugMatch[1];
+    if (seen.has(slug)) return;
+    seen.add(slug);
+
+    const name = $a.text().trim();
+    if (!name) return;
+
+    // 1. Country aus data-country auf der umschließenden Row
+    const countryCode = $item.closest('.eventItemRow').attr('data-country') || null;
+
+    // 2. dateIso aus id-Suffix "eventItem-<uuid>-YYYYMMDD"
+    let dateIso = null;
+    const id = $item.attr('id') || '';
+    const idMatch = id.match(/-(\d{8})$/);
+    if (idMatch) {
+      const d = idMatch[1];
+      dateIso = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+    }
+
+    // 3. dateRange aus span.dates — Anzeigetext wie "6 Jun - 7 Jun".
+    // \s+ wegen Zeilenumbrüchen im HTML.
+    const dateRange = $item.find('span.dates').first().text().trim().replace(/\s+/g, ' ') || null;
+
+    tournaments.push({
+      slug,
+      name,
+      viewUrl: `${BASE_ORIGIN}/View/${slug}`,
+      countryCode,
+      dateRange,
+      dateIso,
+    });
+  });
+
+  // Sortieren aufsteigend nach dateIso — bevorstehende zuerst, Einträge ohne
+  // Datum ans Ende.
+  tournaments.sort((a, b) => {
+    const da = a.dateIso || '9999-99-99';
+    const db = b.dateIso || '9999-99-99';
+    return da.localeCompare(db);
+  });
+
+  return country
+    ? tournaments.filter(t => t.countryCode === country)
+    : tournaments;
 }

@@ -142,7 +142,12 @@
     const headers = { 'content-type': 'application/json', ...(opts.headers || {}) };
     if (window.state.adminPassword) headers['x-admin-password'] = window.state.adminPassword;
     if (window.state.refereeAuth)   headers['x-personal-token'] = window.state.refereeAuth;
-    const res = await fetch(path, { ...opts, headers });
+    // N1 — `opts.fresh = true` umgeht den 5s-Browser-Cache. Wird nach Mutations
+    // gesetzt, damit ein direkt folgender GET-Refresh die frischen Daten sieht.
+    // `fresh` ist ein lokales Flag und wird nicht an fetch durchgereicht.
+    const { fresh, ...fetchOpts } = opts;
+    if (fresh) fetchOpts.cache = 'no-store';
+    const res = await fetch(path, { ...fetchOpts, headers });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       const err = new Error(data?.error || data?.message || `HTTP ${res.status}`);
@@ -229,6 +234,32 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════
+  // HERO-INFO-MODAL (P1.5)
+  // Volle Erklärung der App, die früher als ~330-Zeichen-Text im Hero stand.
+  // Auf der Landing zeigt der Hero jetzt nur eine prägnante Tagline + „?"-Button.
+  // ═══════════════════════════════════════════════════════════════════
+  function openHeroInfoModal() {
+    const backdrop = h('div', { class: 'p3-backdrop',
+      onclick: (e) => { if (e.target === backdrop) closeModal(); }});
+    const card = h('div', { class: 'p3-modal-card', style: 'max-width:480px' });
+    backdrop.appendChild(card);
+    card.appendChild(h('div', { class: 'p3-modal-h' },
+      h('h3', {}, 'Über die VMW Live-App'),
+      h('button', { class: 'p3-close', onclick: closeModal }, '×')));
+    card.appendChild(h('div', { class: 'p3-body' },
+      h('p', { style: 'margin:0 0 12px;line-height:1.55;color:#3a3a3a' },
+        'Übersicht aller Turniere und Ligen, in denen VMW Berlin spielt. Wenn ',
+        'möglich mit Live-Spielständen direkt in der App — sonst mit Verlinkung ',
+        'auf den externen Spielplan.'),
+      h('p', { style: 'margin:0;line-height:1.55;color:#3a3a3a' },
+        'Außerdem zentral für das Tracking der Schiri-Einsätze: Trainer pflegen ',
+        'die Einteilungen, jeder Schiri lädt seinen DKV-Einsatzbogen am ',
+        'Jahresende selbst herunter.'),
+    ));
+    document.body.appendChild(backdrop);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
   // LOGIN-MODAL mit 3 Tabs (Trainer / Master / Schiri)
   // ═══════════════════════════════════════════════════════════════════
   window.openLogin = function() {
@@ -239,9 +270,11 @@
     let activeTab = window.CURRENT_SLUG ? 'master' : 'schiri';
     const tabBar = h('div', { class: 'p3-tabbar' });
     const body = h('div', { class: 'p3-body' });
-    const availableTabs = window.CURRENT_SLUG
-      ? ['master', 'trainer', 'schiri']
-      : ['master', 'schiri'];
+    // N5 — Trainer-Tab unconditional. War vorher Tournament-scoped, aber der
+    // Login selbst soll überall möglich sein. Default-Slug-Hack in der
+    // Auth-Route (`?slug=${CURRENT_SLUG || 'dc2026'}`) bleibt bestehen —
+    // handleLogin in admin.mjs nutzt den Slug nur als Marker.
+    const availableTabs = ['master', 'trainer', 'schiri'];
 
     function render() {
       tabBar.innerHTML = '';
@@ -337,7 +370,27 @@
             toast(`Willkommen ${result.referee.displayName}`, 'success');
             closeModal();
             window.fillUserAreaSlot && window.fillUserAreaSlot();
-            window.openMyProfile();
+            // N6 — Routing-aware Re-Render statt sturem openMyProfile.
+            // Bei Login auf einem Tournament wollen wir die aktuelle View
+            // (external oder kayakers) refreshen, nicht zum Profil springen.
+            const pathname = window.location.pathname;
+            const tMatch = pathname.match(/^\/t\/([^/]+)/);
+            if (tMatch) {
+              const slug = decodeURIComponent(tMatch[1]);
+              try {
+                const data = await fetchData(slug);
+                if (data?.external) {
+                  window.renderExternalDashboard(slug, data);
+                } else if (typeof window.renderActiveTab === 'function') {
+                  window.renderActiveTab();
+                }
+              } catch { /* user merkt's beim manuellen Reload */ }
+            } else if (pathname === '/' || pathname === '') {
+              await window.renderLanding();
+            } else {
+              // /me/<code> oder unbekannter Pfad: Profil-Default wie bisher
+              window.openMyProfile();
+            }
           } catch (e) {
             toast('Login fehlgeschlagen', 'error');
           }
@@ -1009,9 +1062,12 @@
     document.body.appendChild(loadingView);
 
     try {
+      // N1 — `fresh:true` umgeht den 5s-Browser-Cache. openMyProfile() wird
+      // direkt nach Mutationen aufgerufen (POST/PUT/DELETE auf manual-entry);
+      // ohne den Bypass würden die alten Daten gerendert.
       const [profile, entries] = await Promise.all([
-        api('/api/me/profile'),
-        api(`/api/me/entries?year=${new Date().getFullYear()}`),
+        api('/api/me/profile', { fresh: true }),
+        api(`/api/me/entries?year=${new Date().getFullYear()}`, { fresh: true }),
       ]);
       const ref = profile.referee;
       const incomplete = !ref.street || !ref.city || !ref.licenseNr;
@@ -1305,6 +1361,16 @@
         input('tournamentDate', 'Datum *', { type: 'date' }),
         input('matchNr', 'Spiel-Nr. *', { placeholder: 'z.B. 42' }),
         select('role', 'Funktion *', ROLES.map(r => ({ value: r.code, label: r.label }))),
+        // N2 — Spielklasse für DKV-Bogen (wird im PDF in die richtige Spalte
+        // gemappt). Leere Option = nicht angeben (Legacy-Verhalten).
+        select('spielklasse', 'Spielklasse', [
+          { value: '',         label: '— wählen —' },
+          { value: 'herren',   label: 'Herren' },
+          { value: 'damen',    label: 'Damen' },
+          { value: 'junioren', label: 'U21 / Junioren' },
+          { value: 'jugend',   label: 'Jugend' },
+          { value: 'schueler', label: 'Schüler' },
+        ]),
         input('notes', 'Bemerkung (optional)'),
         saveBtn,
       ),
@@ -2378,12 +2444,23 @@
     // ─── Hero (VMW-Brand) ─────────────────────────────────────────────
     // User-Area kommt aus renderUserArea() (zentral) — keine eigene Button-Logik mehr
 
+    // P1.5 — Hero-Beschreibung gekürzt auf eine prägnante Tagline, Vollerklärung
+    // wandert hinter den „?"-Button in ein Info-Modal. Spart auf 375px-Viewport
+    // ~5 Zeilen Hero-Höhe (Hero war vorher ~50% des First-Screens).
+    const heroInfoBtn = h('button', {
+      class: 'p3-hero-info-btn',
+      'aria-label': 'Mehr über die App',
+      onclick: () => openHeroInfoModal(),
+    }, '?');
+
     root.appendChild(h('div', { class: 'p3-hero' },
       h('div', { class: 'p3-hero-inner' },
         h('img', { class: 'p3-hero-logo', src: 'https://vmw-berlin.de/wp-content/uploads/2022/06/cropped-final_logo-3.png', alt: 'VMW Berlin', onerror: 'this.style.display=\'none\'' }),
         h('div', { class: 'p3-hero-text' },
           h('h1', {}, 'VMW Berlin Live-App'),
-          h('p', {}, 'Übersicht aller Turniere und Ligen, in denen VMW Berlin spielt. Wenn möglich mit Live-Spielständen direkt in der App — sonst mit Verlinkung auf den externen Spielplan. Außerdem zentral für das Tracking der Schiri-Einsätze: Trainer pflegen die Einteilungen, jeder Schiri lädt seinen DKV-Einsatzbogen am Jahresende selbst herunter.'),
+          h('p', { class: 'p3-hero-tagline' },
+            'Spielpläne, Live-Stände und Schiri-Einsätze für VMW Berlin.',
+            heroInfoBtn),
         ),
         h('div', { class: 'p3-hero-actions' }, window.renderUserArea({ onBrand: true })),
       ),
