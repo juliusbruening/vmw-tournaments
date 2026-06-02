@@ -67,17 +67,22 @@ export default async (req) => {
 
   // ── Einsätze (auto + manuell) ───────────────────────────────────────
   if (req.method === 'GET' && path === 'entries') {
-    const year = Number(url.searchParams.get('year') || new Date().getFullYear());
+    // N1 R3 — year='all' → year=null durchreichen (Filter überspringt).
+    // listManualEntries und aggregateReferees ignorieren year: undefined/null.
+    // listAutoEntriesForReferee bekommt 'all' weitergereicht und filtert dort.
+    const yearParam = url.searchParams.get('year');
+    const allYears = yearParam === 'all';
+    const year = allYears ? null : Number(yearParam || new Date().getFullYear());
 
     const [agg, manual, autoDetails] = await Promise.all([
-      aggregateReferees({ year }),
-      listManualEntries(refereeId, { year }),
+      aggregateReferees({ year: year ?? undefined }),
+      listManualEntries(refereeId, { year: year ?? undefined }),
       listAutoEntriesForReferee(refereeId, year),
     ]);
     const bucket = agg.byReferee?.[refereeId];
     return new Response(JSON.stringify({
       ok: true,
-      year,
+      year: allYears ? 'all' : year,
       stats: bucket
         ? { totalGames: bucket.totalGames, byRole: bucket.byRole, byTournament: bucket.byTournament }
         : { totalGames: 0, byRole: {}, byTournament: [] },
@@ -180,10 +185,30 @@ async function listAutoEntriesForReferee(refereeId, year) {
   return all;
 }
 
-function validateManualEntry(entry) {
+/**
+ * Validiert einen manualEntry. Exportiert für Tests in
+ * scripts/testManualEntryValidation.mjs.
+ *
+ * N1 R3: Range-Check verhindert „1111-01-01"-Eingaben (Browser-Date-Picker
+ * akzeptiert das, weil das ISO-Format formal stimmt — der Range ist die
+ * App-Plausibilität). Untergrenze 2000 arbitrarisch (vor 2000 gab's keinen
+ * DKV-Einsatzbogen in der heutigen Form). Obergrenze `thisYear+1` lässt
+ * Eingaben für die kommende Saison zu (z.B. Januar 2027 für ein Spiel
+ * im Mai 2027).
+ *
+ * @param {object} entry
+ * @param {number} [now=Date.now()] — DI für Tests (deterministisches thisYear)
+ */
+export function validateManualEntry(entry, now = Date.now()) {
   if (!entry) return 'body required';
   if (!entry.tournamentName || typeof entry.tournamentName !== 'string') return 'tournamentName required';
   if (!entry.tournamentDate || !/^\d{4}-\d{2}-\d{2}$/.test(entry.tournamentDate)) return 'tournamentDate must be YYYY-MM-DD';
+  // N1 R3 — Range-Check
+  const yearNum = Number(entry.tournamentDate.slice(0, 4));
+  const thisYear = new Date(now).getFullYear();
+  if (yearNum < 2000 || yearNum > thisYear + 1) {
+    return `Datum muss zwischen 2000 und ${thisYear + 1} liegen`;
+  }
   if (!entry.role || !ROLES.some(r => r.code === entry.role)) return 'role muss eine bekannte Rolle sein';
   // N2 — spielklasse optional (Legacy-Einträge bleiben valide), wenn gesetzt: prüfen.
   if (entry.spielklasse && !SPIELKLASSEN.includes(entry.spielklasse)) {

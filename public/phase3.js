@@ -1044,7 +1044,7 @@
   // ═══════════════════════════════════════════════════════════════════
   // SELF-SERVICE: Mein Profil + Meine Einsätze
   // ═══════════════════════════════════════════════════════════════════
-  window.openMyProfile = async function() {
+  window.openMyProfile = async function(opts = {}) {
     closeModal();
     // N2 — URL auf /profil setzen, damit Browser-Refresh den User im Profil
     // hält statt auf der Landing zu landen. Idempotent (kein doppelter
@@ -1052,6 +1052,10 @@
     if (window.location.pathname !== '/profil') {
       window.history.pushState({}, '', '/profil');
     }
+    // N1 R3 — Year-Toggle: erlaubt das Aufrufen mit einem anderen Jahr oder 'all'.
+    // Default = aktuelles Jahr. Wert wird sowohl an /api/me/entries als auch an
+    // den DKV-PDF-Button durchgereicht.
+    const activeYear = opts.year ?? new Date().getFullYear();
     // SOFORT Loading-State rendern, NICHT auf den Fetch warten. Sonst bleibt der
     // User auf der vorherigen Page (z.B. External-Dashboard) und denkt "lädt nicht".
     document.body.innerHTML = '';
@@ -1073,7 +1077,8 @@
       // ohne den Bypass würden die alten Daten gerendert.
       const [profile, entries] = await Promise.all([
         api('/api/me/profile', { fresh: true }),
-        api(`/api/me/entries?year=${new Date().getFullYear()}`, { fresh: true }),
+        // N1 R3 — Year-Toggle: 'all' → kein year-Filter
+        api(`/api/me/entries?year=${activeYear}`, { fresh: true }),
       ]);
       const ref = profile.referee;
       const incomplete = !ref.street || !ref.city || !ref.licenseNr;
@@ -1130,44 +1135,84 @@
             '⚠ Bitte ergänze deine Adresse + Ausweis-Nr. unten, damit der jährliche Einsatzbogen-Export funktioniert.') : null,
 
           // Stats als ui-stat-tile
-          h('div', { style: 'display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px' },
-            h('div', { class: 'ui-stat-tile' },
-              h('div', { class: 'num' }, String(entries.stats?.totalGames || 0)),
-              h('div', { class: 'lbl' }, `Einsätze ${entries.year}`)),
-            h('div', { class: 'ui-stat-tile' },
-              h('div', { class: 'num' }, String((entries.manualEntries || []).length)),
-              h('div', { class: 'lbl' }, 'davon manuell')),
-          ),
+          // N1 R3 — Label respektiert das aktive Jahr; bei 'all' wird das
+          // aktuelle Jahr als Default fürs PDF-Label genutzt.
+          (() => {
+            const yearLabel = entries.year === 'all'
+              ? 'alle Jahre'
+              : String(entries.year);
+            // Für DKV-PDF: 'all' ist kein gültiger DKV-Bogen → wir nehmen
+            // im PDF-Fall das aktuelle Jahr. Im UI ist das Verhalten klar
+            // erkennbar, weil das CTA-Label „aktuelles Jahr" zeigt.
+            const pdfYear = entries.year === 'all'
+              ? new Date().getFullYear()
+              : entries.year;
 
-          // DKV-PDF als prominente CTA-Card (Mockup Slide 7)
-          h('div', { class: 'ui-card',
-            style: 'display:flex;align-items:center;gap:12px;background:#F4F3FE;border:1px solid #CECBF6;margin-bottom:14px' },
-            h('div', { style: 'width:38px;height:38px;border-radius:9px;background:#534AB7;color:#fff;display:grid;place-items:center;flex:0 0 auto' },
-              dkvIcon()),
-            h('div', { style: 'flex:1;min-width:0' },
-              h('div', { style: 'font-weight:600;color:#26215C' }, `DKV-Einsatzbogen ${entries.year}`),
-              h('div', { style: 'font-size:12px;color:#5F5BAF;margin-top:2px' }, 'Offizielles PDF — auf Knopfdruck'),
-            ),
-            h('button', {
-              class: 'ui-btn ui-btn-sm',
-              style: 'background:#534AB7;color:#fff;flex:0 0 auto',
-              title: incomplete
-                ? 'Stammdaten unvollständig — PDF enthält Lücken'
-                : 'DKV-Einsatzbogen als PDF herunterladen',
-              onclick: (e) => withLoading(e.currentTarget, 'PDF …', async () => {
-                const filename = `DKV-Einsatzbogen-${ref.code || ref.id}-${entries.year}.pdf`;
-                await window.downloadFile(
-                  `/api/me/pdf-einsatzbogen?year=${entries.year}`,
-                  filename,
-                );
-              }),
-            }, 'PDF laden'),
-          ),
+            return [
+              h('div', { style: 'display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px' },
+                h('div', { class: 'ui-stat-tile' },
+                  h('div', { class: 'num' }, String(entries.stats?.totalGames || 0)),
+                  h('div', { class: 'lbl' }, `Einsätze ${yearLabel}`)),
+                h('div', { class: 'ui-stat-tile' },
+                  h('div', { class: 'num' }, String((entries.manualEntries || []).length)),
+                  h('div', { class: 'lbl' }, 'davon manuell')),
+              ),
+
+              // DKV-PDF als prominente CTA-Card (Mockup Slide 7)
+              h('div', { class: 'ui-card',
+                style: 'display:flex;align-items:center;gap:12px;background:#F4F3FE;border:1px solid #CECBF6;margin-bottom:14px' },
+                h('div', { style: 'width:38px;height:38px;border-radius:9px;background:#534AB7;color:#fff;display:grid;place-items:center;flex:0 0 auto' },
+                  dkvIcon()),
+                h('div', { style: 'flex:1;min-width:0' },
+                  h('div', { style: 'font-weight:600;color:#26215C' }, `DKV-Einsatzbogen ${pdfYear}`),
+                  h('div', { style: 'font-size:12px;color:#5F5BAF;margin-top:2px' },
+                    entries.year === 'all'
+                      ? 'PDF lädt das aktuelle Jahr — wähle einen Year-Tab für andere Jahre'
+                      : 'Offizielles PDF — auf Knopfdruck'),
+                ),
+                h('button', {
+                  class: 'ui-btn ui-btn-sm',
+                  style: 'background:#534AB7;color:#fff;flex:0 0 auto',
+                  title: incomplete
+                    ? 'Stammdaten unvollständig — PDF enthält Lücken'
+                    : 'DKV-Einsatzbogen als PDF herunterladen',
+                  onclick: (e) => withLoading(e.currentTarget, 'PDF …', async () => {
+                    const filename = `DKV-Einsatzbogen-${ref.code || ref.id}-${pdfYear}.pdf`;
+                    await window.downloadFile(
+                      `/api/me/pdf-einsatzbogen?year=${pdfYear}`,
+                      filename,
+                    );
+                  }),
+                }, 'PDF laden'),
+              ),
+            ];
+          })(),
+
+          // N1 R3 — Year-Tabs: letzte 3 Jahre + „Alle". Klick rendert das Profil
+          // mit dem gewählten Jahr neu (öffnet `openMyProfile({year})`). Reuse
+          // der bestehenden .p3-yeartab-Klasse von der Landing.
+          (() => {
+            const thisYear = new Date().getFullYear();
+            const years = [thisYear, thisYear - 1, thisYear - 2];
+            const bar = h('div', { class: 'p3-yeartabs', style: 'margin:12px 0' });
+            years.forEach(y => {
+              const btn = h('button', {
+                class: 'p3-yeartab' + (activeYear === y ? ' active' : ''),
+                onclick: () => window.openMyProfile({ year: y }),
+              }, String(y));
+              bar.appendChild(btn);
+            });
+            bar.appendChild(h('button', {
+              class: 'p3-yeartab' + (activeYear === 'all' ? ' active' : ''),
+              onclick: () => window.openMyProfile({ year: 'all' }),
+            }, 'Alle'));
+            return bar;
+          })(),
 
           // Einsatz-Tabelle (Logik unverändert)
           h('h3', { class: 'ui-section-h' },
             h('span', { class: 'dot dot-planned' }),
-            `Einsätze ${entries.year}`,
+            `Einsätze ${entries.year === 'all' ? '(alle Jahre)' : entries.year}`,
             h('span', { class: 'counter' },
               String((entries.autoEntries?.length || 0) + (entries.manualEntries?.length || 0)))),
           renderEntriesTable(entries),
@@ -1331,7 +1376,12 @@
   window.openManualEntryForm = function() {
     const inputs = {};
     function input(name, label, opts = {}) {
-      const el = h('input', { type: opts.type || 'text', class: 'p3-input', placeholder: opts.placeholder || '' });
+      const attrs = { type: opts.type || 'text', class: 'p3-input', placeholder: opts.placeholder || '' };
+      // N1 R3 — min/max für date-Inputs durchreichen, damit der Browser-Picker
+      // den Datumsbereich von vornherein einschränkt (verhindert 1111-01-01).
+      if (opts.min) attrs.min = opts.min;
+      if (opts.max) attrs.max = opts.max;
+      const el = h('input', attrs);
       inputs[name] = el;
       return h('div', { class: 'p3-field' }, h('label', {}, label), el);
     }
@@ -1364,7 +1414,12 @@
         h('button', { class: 'p3-close', onclick: closeModal }, '×')),
       h('div', { class: 'p3-body' },
         input('tournamentName', 'Veranstaltung *', { placeholder: 'z.B. Pokal Frühling Cottbus 2026' }),
-        input('tournamentDate', 'Datum *', { type: 'date' }),
+        // N1 R3 — Range 2000 bis next-year (Server-Validierung im Backend)
+        input('tournamentDate', 'Datum *', {
+          type: 'date',
+          min: '2000-01-01',
+          max: `${new Date().getFullYear() + 1}-12-31`,
+        }),
         input('matchNr', 'Spiel-Nr. *', { placeholder: 'z.B. 42' }),
         select('role', 'Funktion *', ROLES.map(r => ({ value: r.code, label: r.label }))),
         // N2 — Spielklasse für DKV-Bogen (wird im PDF in die richtige Spalte

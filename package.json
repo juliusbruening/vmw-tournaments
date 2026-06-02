@@ -8,10 +8,11 @@
     "node": ">=20"
   },
   "scripts": {
-    "test":            "npm run test:parse && npm run test:loader && npm run test:tid && npm run test:snapshot && npm run test:dkv-layout && npm run test:dkv-pdf && npm run test:dkv-fields && npm run test:role-mapping && npm run test:aggregation && npm run test:cache-headers && npm run test:grouping && npm run test:create-tournament && npm run test:kayakers-listing && npm run test:manual-entries-index",
-    "test:create-tournament":     "node scripts/testCreateTournamentConfig.mjs",
-    "test:kayakers-listing":      "node scripts/testKayakersListing.mjs",
-    "test:manual-entries-index":  "node scripts/testManualEntriesIndex.mjs",
+    "test":            "npm run test:parse && npm run test:loader && npm run test:tid && npm run test:snapshot && npm run test:dkv-layout && npm run test:dkv-pdf && npm run test:dkv-fields && npm run test:role-mapping && npm run test:aggregation && npm run test:cache-headers && npm run test:grouping && npm run test:create-tournament && npm run test:kayakers-listing && npm run test:manual-entries-index && npm run test:manual-entry-validation",
+    "test:create-tournament":       "node scripts/testCreateTournamentConfig.mjs",
+    "test:kayakers-listing":        "node scripts/testKayakersListing.mjs",
+    "test:manual-entries-index":    "node scripts/testManualEntriesIndex.mjs",
+    "test:manual-entry-validation": "node scripts/testManualEntryValidation.mjs",
     "test:parse":         "node scripts/testParseMatchList.mjs",
     "test:loader":        "node scripts/testTournamentLoader.mjs",
     "test:tid":           "node scripts/testTidBasedMatching.mjs",
