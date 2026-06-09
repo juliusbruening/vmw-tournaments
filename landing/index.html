@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VMW Live-App — Alle Turniere des Vereins an einem Ort</title>
+<meta name="description" content="Spielpläne, Ergebnisse, Schiri-Einteilung und DKV-Einsatzbögen für die VMW Berlin — an einem Ort." />
+<link rel="icon" href="https://vmw-berlin.de/wp-content/uploads/2022/06/cropped-final_logo-3.png?w=64" />
+<link rel="apple-touch-icon" href="https://vmw-berlin.de/wp-content/uploads/2022/06/cropped-final_logo-3.png?w=180" />
+<style>
+  :root{
+    --vmw-red:#C8102E;
+    --vmw-red-dark:#9C0C24;
+    --ink:#1A1A1A;
+    --ink-2:#4A4A4A;
+    --ink-3:#8A8A8A;
+    --line:#E8E8E8;
+    --bg-base:#F7F4ED;
+    --bg-muted:#F0EBE0;
+    --card:#FFFFFF;
+    --shadow-card:0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.05);
+    --shadow-elev:0 4px 12px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.06);
+    --r-md:10px; --r-lg:14px; --r-pill:999px;
+    --pill-live-bg:#DCFCE7;    --pill-live-ink:#15803D;
+    --pill-planned-bg:#FEF3C7; --pill-planned-ink:#A16207;
+    --pill-done-bg:#F1F1F1;    --pill-done-ink:#555;
+    --pill-extern-bg:#FFEDD5;  --pill-extern-ink:#B45309;
+    --maxw:1080px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;color:var(--ink);background:var(--bg-base);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:16px;line-height:1.55;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+
+  /* ── Buttons ── */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    font-weight:600;font-size:15px;
+    padding:12px 22px;border-radius:var(--r-pill);
+    border:1px solid transparent;transition:.15s background,.15s transform,.15s border-color;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--vmw-red);color:#fff}
+  .btn-primary:hover{background:var(--vmw-red-dark)}
+  .btn-ghost{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.4)}
+  .btn-ghost:hover{background:rgba(255,255,255,.24)}
+  .btn-outline{background:#fff;color:var(--ink);border-color:var(--line)}
+  .btn-outline:hover{border-color:var(--vmw-red);color:var(--vmw-red)}
+
+  /* ── Header ── */
+  header.site{
+    position:sticky;top:0;z-index:30;
+    background:rgba(200,16,46,.96);
+    -webkit-backdrop-filter:saturate(180%) blur(12px);
+    backdrop-filter:saturate(180%) blur(12px);
+    color:#fff;border-bottom:1px solid rgba(255,255,255,.1);
+  }
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    header.site{background:var(--vmw-red)}
+  }
+  header.site .inner{display:flex;align-items:center;gap:12px;min-height:60px}
+  header.site .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:.2px}
+  header.site .logo-badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    background:#fff;border-radius:8px;padding:3px 6px;
+  }
+  header.site .logo-badge img{height:26px;width:auto;display:block}
+  header.site .spacer{flex:1}
+  header.site .btn{padding:9px 18px;font-size:14px}
+
+  /* ── Hero (bildfrei: tiefer Rot-Verlauf + Muster + Wellen-Kante) ── */
+  .hero{position:relative;color:#fff;overflow:hidden;
+    background:
+      radial-gradient(1100px 620px at 86% -20%, rgba(255,255,255,.22), transparent 55%),
+      radial-gradient(820px 620px at -12% 118%, rgba(0,0,0,.38), transparent 55%),
+      linear-gradient(155deg, #A50D26 0%, var(--vmw-red) 46%, #7C0A1E 100%);
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+    background-image:repeating-linear-gradient(45deg, rgba(255,255,255,.05) 0 2px, transparent 2px 24px);
+    -webkit-mask-image:linear-gradient(180deg,#000 0%,transparent 80%);
+    mask-image:linear-gradient(180deg,#000 0%,transparent 80%);
+  }
+  .hero .inner{position:relative;z-index:3;padding:96px 20px 124px;max-width:var(--maxw);margin:0 auto}
+  .hero-wave{position:absolute;left:0;right:0;bottom:-1px;z-index:2;line-height:0;pointer-events:none}
+  .hero-wave svg{display:block;width:100%;height:64px}
+  .hero .eyebrow{
+    display:inline-block;font-size:13px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;
+    background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);
+    padding:5px 13px;border-radius:var(--r-pill);margin-bottom:20px;
+  }
+  .hero h1{font-size:clamp(32px,5.2vw,56px);line-height:1.07;margin:0 0 18px;font-weight:700;max-width:15ch}
+  .hero p.sub{font-size:clamp(16px,2vw,19px);line-height:1.55;max-width:54ch;margin:0 0 30px;color:rgba(255,255,255,.94)}
+  .hero .cta-row{display:flex;flex-wrap:wrap;gap:12px}
+
+  /* ── Section scaffolding ── */
+  section{padding:72px 0}
+  section.muted{background:var(--bg-muted)}
+  .sec-head{max-width:60ch;margin-bottom:40px}
+  .sec-head h2{font-size:clamp(26px,3.4vw,36px);line-height:1.15;margin:0 0 10px;font-weight:700}
+  .sec-head p.lead{font-size:18px;color:var(--ink-2);margin:0}
+
+  /* ── Problem cards ── */
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .pain{background:var(--card);border-radius:var(--r-lg);padding:26px;box-shadow:var(--shadow-card);border:1px solid var(--line)}
+  .pain .quote{font-weight:700;font-size:18px;margin:0 0 10px;color:var(--vmw-red)}
+  .pain p{margin:0;color:var(--ink-2);font-size:15px}
+
+  /* ── Role cards (Farb-Akzentleiste statt Foto) ── */
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+  .role{
+    background:var(--card);border-radius:var(--r-lg);overflow:hidden;
+    box-shadow:var(--shadow-card);border:1px solid var(--line);
+    display:flex;flex-direction:column;transition:.18s transform,.18s box-shadow;
+  }
+  .role:hover{transform:translateY(-3px);box-shadow:var(--shadow-elev)}
+  .role .bar{height:6px}
+  .role .body{padding:22px 20px 24px}
+  .role .pill{display:inline-block;font-size:12px;font-weight:600;padding:4px 11px;border-radius:var(--r-pill);margin-bottom:14px}
+  .role h3{margin:0 0 4px;font-size:13px;font-weight:600;color:var(--ink-3);letter-spacing:.4px}
+  .role .title{font-size:19px;font-weight:700;margin:0 0 10px;display:block}
+  .role p{margin:0;font-size:14.5px;color:var(--ink-2)}
+
+  /* ── Steps ── */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .step .num{
+    width:40px;height:40px;border-radius:var(--r-pill);background:var(--vmw-red);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;margin-bottom:14px;
+  }
+  .step h3{margin:0 0 6px;font-size:19px;font-weight:700}
+  .step p{margin:0;color:var(--ink-2);font-size:15px}
+
+  /* ── FAQ ── */
+  .faq{max-width:760px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);padding:0 20px;margin-bottom:12px;box-shadow:var(--shadow-card)}
+  details summary{list-style:none;cursor:pointer;font-weight:600;font-size:16.5px;padding:18px 0;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";font-size:22px;color:var(--vmw-red);font-weight:400;transition:.2s transform}
+  details[open] summary::after{transform:rotate(45deg)}
+  details .ans{padding:0 0 18px;color:var(--ink-2);font-size:15px;margin:0}
+
+  /* ── CTA (gleicher Look wie Hero: Verlauf + Streifenmuster) ── */
+  .cta-final{position:relative;overflow:hidden;color:#fff;text-align:center;
+    background:
+      radial-gradient(1100px 620px at 86% -20%, rgba(255,255,255,.22), transparent 55%),
+      radial-gradient(820px 620px at -12% 118%, rgba(0,0,0,.38), transparent 55%),
+      linear-gradient(155deg, #A50D26 0%, var(--vmw-red) 46%, #7C0A1E 100%);
+  }
+  .cta-final::before{
+    content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+    background-image:repeating-linear-gradient(45deg, rgba(255,255,255,.05) 0 2px, transparent 2px 24px);
+    -webkit-mask-image:linear-gradient(0deg,#000 0%,transparent 85%);
+    mask-image:linear-gradient(0deg,#000 0%,transparent 85%);
+  }
+  .cta-final .wrap{position:relative;z-index:2}
+  .cta-final h2{font-size:clamp(26px,3.4vw,38px);margin:0 0 12px;font-weight:700}
+  .cta-final p{font-size:18px;margin:0 0 26px;color:rgba(255,255,255,.94)}
+
+  /* ── Footer ── */
+  footer.site{background:#1A1A1A;color:rgba(255,255,255,.7);padding:34px 0;font-size:14px}
+  footer.site .foot{text-align:center}
+  footer.site .foot p{margin:6px 0}
+  footer.site .credit{color:rgba(255,255,255,.92);font-weight:600}
+  footer.site .legal{font-size:13px;color:rgba(255,255,255,.6)}
+  footer.site a{color:#fff;text-decoration:underline;text-decoration-color:rgba(255,255,255,.35)}
+  footer.site a:hover{text-decoration-color:#fff}
+
+  /* ── Responsive ── */
+  @media (max-width:880px){
+    .grid-4{grid-template-columns:repeat(2,1fr)}
+    .grid-3{grid-template-columns:1fr}
+    .steps{grid-template-columns:1fr}
+  }
+  @media (max-width:520px){
+    .grid-4{grid-template-columns:1fr}
+    .hero .inner{padding:64px 20px 72px}
+    section{padding:54px 0}
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap inner">
+    <a class="brand" href="#top">
+      <span class="logo-badge"><img src="https://vmw-berlin.de/wp-content/uploads/2022/06/vmw_flag_red.png?w=120" alt="VMW Berlin" /></span>
+      <span>Live-App</span>
+    </a>
+    <div class="spacer"></div>
+    <a class="btn btn-ghost" data-app-link href="#">Zur App →</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="inner">
+    <span class="eyebrow">VMW Live-App</span>
+    <h1>Alle Turniere unseres Vereins an einem Ort.</h1>
+    <p class="sub">Spielpläne, Ergebnisse, Schiri-Einteilung und Einsatzbögen — Schluss mit verstreuten Links, Zetteln und Excel-Listen. Eine Seite für uns alle in der VMW.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" data-app-link href="#">Zur App →</a>
+      <a class="btn btn-ghost" href="#how">Wie funktioniert's?</a>
+    </div>
+  </div>
+  <div class="hero-wave" aria-hidden="true">
+    <svg viewBox="0 0 1440 64" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,40 C240,8 480,8 720,28 C960,48 1200,64 1440,36 L1440,64 L0,64 Z" fill="#F0EBE0"></path>
+    </svg>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="muted">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Kennst du das?</h2>
+      <p class="lead">Turniere sind Stress genug — die Organisation drumherum muss es nicht sein.</p>
+    </div>
+    <div class="grid-3">
+      <div class="pain">
+        <p class="quote">Spielplan? Steht in drei verschiedenen Chats.</p>
+        <p>Ergebnisse hängen auf kayakers, am Aushang in der Halle und irgendwo in der WhatsApp-Gruppe. Wer den aktuellen Stand will, sucht.</p>
+      </div>
+      <div class="pain">
+        <p class="quote">Wer pfeift eigentlich Spiel 14?</p>
+        <p>Schiri-Einteilung läuft über Zettel und Zuruf. Niemand hat den Überblick, wer wann an welcher Position eingeteilt ist.</p>
+      </div>
+      <div class="pain">
+        <p class="quote">Einsatzbogen am Jahresende — jedes Mal aufs Neue.</p>
+        <p>Wer wie oft gepfiffen hat, muss am Jahresende mühsam von Hand zusammengesucht und in den DKV-Bogen übertragen werden.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROLES -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Egal, in welcher Rolle du im Verein bist</h2>
+      <p class="lead">Die App macht für jeden etwas anderes leichter.</p>
+    </div>
+    <div class="grid-4">
+
+      <div class="role">
+        <div class="bar" style="background:var(--pill-live-ink)"></div>
+        <div class="body">
+          <span class="pill" style="background:var(--pill-live-bg);color:var(--pill-live-ink)">Live</span>
+          <h3>SPIELER &amp; TEAMS</h3>
+          <span class="title">Immer wissen, was läuft</span>
+          <p>Spielpläne und Ergebnisse direkt auf dem Handy — bei vielen Turnieren live in Echtzeit. Sieh auf einen Blick, wann dein Team spielt, gegen wen, und auf welchem Feld. Geplante und beendete Turniere findest du an derselben Stelle.</p>
+        </div>
+      </div>
+
+      <div class="role">
+        <div class="bar" style="background:var(--pill-extern-ink)"></div>
+        <div class="body">
+          <span class="pill" style="background:var(--pill-extern-bg);color:var(--pill-extern-ink)">Schiri</span>
+          <h3>SCHIRIS</h3>
+          <span class="title">Deine Einsätze, dein Bogen</span>
+          <p>Eigener Login mit persönlichem Code. Sieh deine komplette Einsatz-Historie, trag Einsätze bei anderen Turnieren selbst nach — und lade deinen DKV-Einsatzbogen als fertiges PDF herunter. Kein Übertragen von Hand mehr.</p>
+        </div>
+      </div>
+
+      <div class="role">
+        <div class="bar" style="background:var(--pill-planned-ink)"></div>
+        <div class="body">
+          <span class="pill" style="background:var(--pill-planned-bg);color:var(--pill-planned-ink)">Trainer</span>
+          <h3>TRAINER</h3>
+          <span class="title">Einteilen in Sekunden</span>
+          <p>Teile Schiris pro Spiel rollenbasiert ein — 1. Schiri, 2. Schiri, Protokoll, Zeit, Shotclock, Linien. Mit Filter nach Klasse und Kategorie, direkt am Handy. Die App passt auf, dass die Einteilung zu Lizenz und Klasse passt.</p>
+        </div>
+      </div>
+
+      <div class="role">
+        <div class="bar" style="background:var(--ink-3)"></div>
+        <div class="body">
+          <span class="pill" style="background:var(--pill-done-bg);color:var(--pill-done-ink)">Orga</span>
+          <h3>ORGA &amp; VEREIN</h3>
+          <span class="title">Turniere verwalten ohne Aufwand</span>
+          <p>Neues Turnier per Wizard anlegen, der Spielplan wird automatisch importiert und live gehalten. Am Jahresende: fertige Schiri-Reports und CSV-Export auf Knopfdruck — für DKV-Meldungen und Vereinsstatistik.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- HOW -->
+<section class="muted" id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>In drei Schritten dabei</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>Link öffnen</h3>
+        <p>Keine Installation, kein App-Store. Die App läuft direkt im Browser — auf dem Handy lässt sie sich wie eine App zum Startbildschirm hinzufügen.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Einloggen (oder einfach zuschauen)</h3>
+        <p>Spielpläne und Ergebnisse sind für alle offen. Schiris und Trainer loggen sich mit ihrem persönlichen Code bzw. Passwort ein.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Loslegen</h3>
+        <p>Team-Spielplan checken, Schiris einteilen oder den Einsatzbogen ziehen — je nachdem, was du brauchst.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Häufige Fragen</h2>
+    </div>
+    <div class="faq">
+      <details open>
+        <summary>Muss ich etwas installieren?</summary>
+        <p class="ans">Nein. Die App läuft im Browser. Auf dem Handy kannst du sie optional über „Zum Startbildschirm hinzufügen" wie eine echte App ablegen.</p>
+      </details>
+      <details>
+        <summary>Aktualisieren sich die Ergebnisse von selbst?</summary>
+        <p class="ans">Bei Turnieren mit Spielplan auf kayakers.nl (die gängige Plattform) ja: Ergebnisse und Tabellen werden an Turniertagen alle paar Minuten automatisch geholt — niemand muss etwas von Hand eintragen. Bei Turnieren ohne solchen Spielplan ist der jeweilige Plan in der Übersicht verlinkt.</p>
+      </details>
+      <details>
+        <summary>Wie bekomme ich meinen Schiri-Login?</summary>
+        <p class="ans">Deinen persönlichen Login-Code bekommst du von der Vereinsorga. Damit kommst du an deine Einsatz-Historie und deinen DKV-Bogen.</p>
+      </details>
+      <details>
+        <summary>Welche Turniere finde ich in der App?</summary>
+        <p class="ans">Im Grunde alle. Die meisten holen ihren Spielplan automatisch und aktualisieren sich von selbst — Ergebnisse erscheinen dort live. Für die Herren-Bundesliga gibt es eine eigene App, die direkt aus der Übersicht verlinkt ist. Und für alle übrigen Turniere gibt es eine Übersichtsseite, auf der die jeweiligen Spielpläne verlinkt werden. So ist alles an einer Stelle erreichbar.</p>
+      </details>
+      <details>
+        <summary>Sind meine Daten sicher?</summary>
+        <p class="ans">Persönliche Profildaten siehst und änderst nur du selbst. Öffentlich sichtbar sind lediglich anonyme Einsatz-Statistiken, keine Kontaktdaten.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="cta-final">
+  <div class="wrap">
+    <h2>Bereit?</h2>
+    <p>Ein Link für uns alle in der VMW — einfach weitergeben.</p>
+    <a class="btn btn-outline" data-app-link href="#">Zur App →</a>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap foot">
+    <p class="credit">Gebaut von Julius Brüning für die VMW Berlin · <a href="mailto:juliusbruening1994@gmail.com?subject=Feedback%20VMW%20Live-App">Feedback?</a></p>
+    <p class="legal">Inoffizielles Vereinsprojekt — kein Ersatz für die offizielle Turnier-Seite. <a href="https://vmw-berlin.de/impressum/" target="_blank" rel="noopener">Impressum</a></p>
+  </div>
+</footer>
+
+<script>
+  /* ═══ ANPASSEN: Adresse der App. Alle "Zur App"-Buttons verlinken hierhin. ═══ */
+  const APP_URL = "https://vmw-berlin-tournaments.netlify.app";
+  /* ═══════════════════════════════════════════════════════════════════════════ */
+  document.querySelectorAll('[data-app-link]').forEach(function(a){
+    a.href = APP_URL;
+    a.target = "_blank";       // App in neuem Tab öffnen
+    a.rel = "noopener";
+  });
+</script>
+
+</body>
+</html>
