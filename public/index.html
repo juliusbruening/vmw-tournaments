@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#C8102E">
   <title>VMW Live-App</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cpolygon%20points%3D%220%2C5%2095%2C50%200%2C95%22%20fill%3D%22%23C8102E%22%2F%3E%3C%2Fsvg%3E">
-  <link rel="apple-touch-icon" href="https://vmw-berlin.de/wp-content/uploads/2022/06/cropped-final_logo-3.png">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/phase3.css">
@@ -190,5 +190,12 @@
 
 <script src="/app.js"></script>
 <script src="/phase3.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  }
+</script>
 </body>
 </html>

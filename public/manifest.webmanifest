@@ -1,17 +1,30 @@
 {
-  "name": "VMW Deutschland Cup 2026",
-  "short_name": "VMW DCup",
-  "description": "Live-Companion für den Deutschland Cup 2026 (Kanupolo) — VMW Berlin",
+  "name": "VMW Live-App",
+  "short_name": "VMW Live",
+  "description": "Multi-Turnier-Live-App für VMW Berlin (Kanupolo) — Spielpläne, Ergebnisse & Schiedsrichter-Einsätze",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#F5F5F7",
   "theme_color": "#C8102E",
   "icons": [
     {
-      "src": "https://vmw-berlin.de/wp-content/uploads/2022/06/cropped-final_logo-3.png",
-      "sizes": "270x270",
+      "src": "/assets/icons/icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

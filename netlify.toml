@@ -90,3 +90,27 @@
   for = "/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# JS/CSS liegen direkt unter /public (nicht /static) — ohne diese Header
+# liefert Netlify sie ohne Cache-Control aus und jeder Pageload lädt
+# ~250KB neu. 1h Browser-Cache + must-revalidate: nach einem Deploy holt
+# der Browser spätestens nach 1h die neue Version (HTML ist eh max-age=0).
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+
+# Icons ändern sich praktisch nie
+[[headers]]
+  for = "/assets/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# Kein eigener Header für /sw.js: er würde mit der /*.js-Regel gemerged
+# (Netlify kombiniert überlappende Regeln). Browser prüfen SW-Updates
+# ohnehin standardmäßig am HTTP-Cache vorbei (updateViaCache-Default).

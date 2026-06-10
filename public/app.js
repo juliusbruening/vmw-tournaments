@@ -505,6 +505,19 @@ function escapeHtml(s){
   return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// innerHTML nur setzen, wenn sich der Inhalt geändert hat — der 60s-Poll
+// rendert sonst identisches Markup neu und erzeugt sichtbares Flackern.
+// Rückgabe true = DOM wurde ersetzt. Wichtig für Caller, die danach
+// Listener anbinden: bei false NICHT erneut binden (alte Nodes leben noch,
+// doppelte Listener würden Toggles zu No-Ops machen).
+let _setHtmlCache = new WeakMap();
+function setHTML(el, html){
+  if (_setHtmlCache.get(el) === html) return false;
+  el.innerHTML = html;
+  _setHtmlCache.set(el, html);
+  return true;
+}
+
 /* =========================================================
    CARDS
    ========================================================= */
@@ -698,9 +711,9 @@ function renderLive(){
 }
 function setLiveSections(live, next, refs, done){
   document.getElementById('liveNowCount').textContent = live.length;
-  document.getElementById('liveNowList').innerHTML = live.length
+  setHTML(document.getElementById('liveNowList'), live.length
     ? renderGroupedByTime(live)
-    : `<div class="empty">Gerade kein VMW-Spiel live.</div>`;
+    : `<div class="empty">Gerade kein VMW-Spiel live.</div>`);
 
   // Einheitlicher Cap = 4 ZEIT-SLOTS für alle Sektionen.
   // Beispiel: 2 Spiele um 11:00 + 1 Spiel um 11:30 + 1 Spiel um 12:00 + 1 Spiel um 12:30 = 5 Karten in 4 Slots,
@@ -737,7 +750,7 @@ function renderExpandableSection(listId, moreBtnId, countId, list, key, emptyHtm
   const listEl = document.getElementById(listId);
   const moreEl = document.getElementById(moreBtnId);
   if (!list.length){
-    listEl.innerHTML = emptyHtml;
+    setHTML(listEl, emptyHtml);
     moreEl.hidden = true;
     return;
   }
@@ -745,7 +758,7 @@ function renderExpandableSection(listId, moreBtnId, countId, list, key, emptyHtm
   const visible = expanded ? list : takeTopTimeSlots(list, slotCap);
   // desc=true rendert die Zeit-Blöcke absteigend — wichtig für "Gerade beendet",
   // damit die jüngsten beendeten Spiele oben stehen.
-  listEl.innerHTML = renderGroupedByTime(visible, { desc: !!opts.desc });
+  setHTML(listEl, renderGroupedByTime(visible, { desc: !!opts.desc }));
   const hidden = list.length - visible.length;
   if (hidden > 0){
     moreEl.hidden = false;
@@ -781,7 +794,7 @@ function renderPlan(){
 
   const out = document.getElementById('planList');
   if (!state.snapshot){
-    out.innerHTML = `<div class="loading-skel">Lade Spielplan …</div>`;
+    setHTML(out, `<div class="loading-skel">Lade Spielplan …</div>`);
     return;
   }
 
@@ -795,7 +808,7 @@ function renderPlan(){
   list.sort((a,b)=>matchSortKey(a)-matchSortKey(b));
 
   if(!list.length){
-    out.innerHTML = `<div class="empty">Keine Spiele für diese Auswahl.</div>`;
+    setHTML(out, `<div class="empty">Keine Spiele für diese Auswahl.</div>`);
     return;
   }
 
@@ -839,9 +852,11 @@ function renderPlan(){
     }
   }
 
-  out.innerHTML = html;
-  const pt = document.getElementById('pastToggle');
-  if(pt) pt.addEventListener('click', ()=>{ state.planPastOpen = !state.planPastOpen; renderPlan(); });
+  // Listener nur nach echtem DOM-Swap binden — sonst doppelt (siehe setHTML).
+  if (setHTML(out, html)){
+    const pt = document.getElementById('pastToggle');
+    if(pt) pt.addEventListener('click', ()=>{ state.planPastOpen = !state.planPastOpen; renderPlan(); });
+  }
 }
 
 /* =========================================================
@@ -871,7 +886,13 @@ function renderTeams(){
   const team = teamByCode(code);
   const out = document.getElementById('teamDetail');
   if (!state.snapshot){
-    out.innerHTML = `<div class="loading-skel">Lade Team-Daten …</div>`;
+    setHTML(out, `<div class="loading-skel">Lade Team-Daten …</div>`);
+    return;
+  }
+  // Turnier ohne konfigurierte VMW-Teams (z.B. frisch angelegt): freundlicher
+  // Hinweis statt Crash beim Zugriff auf team.division.
+  if (!team){
+    setHTML(out, `<div class="empty">Für dieses Turnier sind noch keine VMW-Teams eingeteilt.</div>`);
     return;
   }
 
@@ -924,7 +945,7 @@ function renderTeams(){
     return html;
   }
 
-  out.innerHTML = `
+  const teamsHtml = `
     <div style="background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 14px 12px;margin-bottom:14px">
       <div style="font-size:13px;color:var(--ink-3);font-weight:600">${escapeHtml(divisionLabel(team.division))}</div>
       <div style="font-size:20px;font-weight:800;color:var(--vmw-red);margin-top:2px">${escapeHtml(team.name)}</div>
@@ -948,10 +969,13 @@ function renderTeams(){
         </div>`).join('')}
     </div>
   `;
-  const pt = document.getElementById('teamsPastToggle');
-  if(pt) pt.addEventListener('click', ()=>{ state.teamsPastOpen = !state.teamsPastOpen; renderTeams(); });
-  const rt = document.getElementById('teamsRefPastToggle');
-  if(rt) rt.addEventListener('click', ()=>{ state.teamsRefPastOpen = !state.teamsRefPastOpen; renderTeams(); });
+  // Listener nur nach echtem DOM-Swap binden — sonst doppelt (siehe setHTML).
+  if (setHTML(out, teamsHtml)){
+    const pt = document.getElementById('teamsPastToggle');
+    if(pt) pt.addEventListener('click', ()=>{ state.teamsPastOpen = !state.teamsPastOpen; renderTeams(); });
+    const rt = document.getElementById('teamsRefPastToggle');
+    if(rt) rt.addEventListener('click', ()=>{ state.teamsRefPastOpen = !state.teamsRefPastOpen; renderTeams(); });
+  }
 }
 
 /* =========================================================
@@ -964,14 +988,14 @@ function computeHausliga(){
 function renderHausliga(){
   const tbody = document.querySelector('#hausligaTable tbody');
   const rows = computeHausliga();
-  tbody.innerHTML = rows.map((r,i)=>`
+  setHTML(tbody, rows.map((r,i)=>`
     <tr>
       <td class="rank">${i+1}</td>
       <td class="team-cell">${r.pillLabel}</td>
       <td>${r.Sp}</td><td>${r.W}</td><td>${r.D}</td><td>${r.L}</td>
       <td>${r.GF}:${r.GA}</td><td>${r.GD>=0?'+':''}${r.GD}</td><td><strong>${r.P}</strong></td>
       <td class="ppg">${r.Sp>0 ? r.PPG.toFixed(2) : '—'}</td>
-    </tr>`).join('');
+    </tr>`).join(''));
 
   const f = state.scorerFilt;
   document.querySelectorAll('#scorerPills button').forEach(b=>{
@@ -990,18 +1014,18 @@ function renderHausliga(){
   const moreBtn = document.getElementById('scorersMoreBtn');
 
   if(!scorers.length){
-    out.innerHTML = `<div class="empty" style="border-radius:var(--radius)">Noch keine Tore in dieser Auswahl.</div>`;
+    setHTML(out, `<div class="empty" style="border-radius:var(--radius)">Noch keine Tore in dieser Auswahl.</div>`);
     moreBtn.style.display = 'none';
     return;
   }
   const visible = state.scorersAllVisible ? scorers : scorers.slice(0,10);
-  out.innerHTML = visible.map((s,i)=>`
+  setHTML(out, visible.map((s,i)=>`
     <div class="scorer">
       <span class="rank">${i+1}.</span>
       <span class="team-av team-${s.code}">${escapeHtml(s.team)}</span>
       <span class="name ${s.name?'':'empty'}">${s.name ? escapeHtml(s.name) : '— Vorname fehlt —'}</span>
       <span class="goals">${s.goals||0}<small>Tore</small></span>
-    </div>`).join('');
+    </div>`).join(''));
 
   if(scorers.length > 10){
     moreBtn.style.display = '';
@@ -1228,6 +1252,15 @@ function tickStale(){
   const el  = document.getElementById('updatedText');
   const dot = document.getElementById('updatedDot');
 
+  // Verbindungsproblem hat Vorrang vor dem Datenalter: der Nutzer soll
+  // sehen, dass die App gerade nicht aktualisieren kann — nicht nur, dass
+  // die Daten alt sind.
+  if (state.fetchError){
+    el.textContent = 'keine Verbindung';
+    if (dot) dot.className = 'dot dead';
+    return;
+  }
+
   // Wir zeigen NICHT den Frontend-Sync-Zeitpunkt, sondern wann der Scraper
   // zuletzt frische Daten von kayakers.nl geholt hat (snapshot.lastUpdated).
   const stamp = state.snapshot?.lastUpdated;
@@ -1389,15 +1422,33 @@ async function fetchData(){
     // die nächste Poll-Antwort sie nicht enthielt.
     state.refs = _mergeIncomingRefs(data.refereeAssignments);
     state.lastFetchOk = Date.now();
+    if (state.fetchError) showToast('Wieder verbunden — Daten aktualisiert');
     state.fetchError = null;
     renderActiveTab();
     tickStale();
   } catch (e){
+    // Toast nur beim Übergang OK→Fehler, nicht bei jedem fehlgeschlagenen
+    // 60s-Poll — sonst nervt die App im Funkloch minütlich.
+    if (!state.fetchError && state.lastFetchOk) {
+      showToast('Keine Verbindung — zeige letzten Stand');
+    }
     state.fetchError = e.message;
     // Wenn wir noch nie Daten hatten, zeige Loading-Skeleton; sonst behalte bestehende Daten.
     renderActiveTab();
+    tickStale();
   }
 }
+
+// Browser-Events als schnelle Offline-Indikation — feuern sofort statt
+// erst beim nächsten 60s-Poll. 'online' triggert direkt einen Refresh.
+window.addEventListener('offline', ()=>{
+  if (!state.fetchError) showToast('Offline — Daten werden nicht aktualisiert');
+  state.fetchError = 'offline';
+  tickStale();
+});
+window.addEventListener('online', ()=>{
+  fetchData();
+});
 
 /* =========================================================
    WIRE UP
